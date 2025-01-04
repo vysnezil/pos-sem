@@ -4,7 +4,6 @@ project(pos_sem C)
 set(CMAKE_C_STANDARD 11)
 add_executable(pos_sem main.c)
 
-add_subdirectory(libshared)
 add_subdirectory(libgraphics)
 add_subdirectory(libinput)
 

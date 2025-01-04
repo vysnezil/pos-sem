@@ -1,16 +1,16 @@
 #include "graphics.h"
-#include "../libshared/term.h"
+#include "../libshared/termbox2.h"
 
 void graphics_init() {
-    term_init();
+    tb_init();
 }
 
 void graphics_destroy() {
-    term_destroy();
+    tb_shutdown();
 }
 
 void graphics_refresh() {
-    term_update();
+    tb_present();
 }
 
 void draw_line(int x1, int y1, int x2, int y2) {
@@ -43,5 +43,5 @@ void draw_line(int x1, int y1, int x2, int y2) {
 }
 
 void draw_pixel(int x, int y) {
-    term_draw(x, y, 'x', 2, 0);
+    tb_set_cell(x, y, 'x', TB_CYAN, TB_BLACK);
 }

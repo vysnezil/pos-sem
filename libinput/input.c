@@ -1,6 +1,5 @@
 #include "input.h"
-#define TB_IMPL
-#include "../libshared/term.h"
+#include "../libshared/termbox2.h"
 #include <pthread.h>
 
 pthread_t input_thread;
@@ -15,16 +14,17 @@ void* handle_input(void* arg) {
 }
 
 void input_init() {
-    term_init();
+    tb_init();
     pthread_create(&input_thread, NULL, &handle_input, NULL);
     pthread_detach(input_thread);
 }
 
 void input_destroy() {
     pthread_cancel(input_thread);
-    term_destroy();
+    tb_shutdown();
 }
 
 void input_getkey() {
-    term_wait_key();
+    struct tb_event ev;
+    tb_poll_event(&ev);
 }
