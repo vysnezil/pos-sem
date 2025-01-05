@@ -43,5 +43,48 @@ void draw_line(int x1, int y1, int x2, int y2) {
 }
 
 void draw_pixel(int x, int y) {
-    tb_set_cell(x, y, 'x', TB_CYAN, TB_BLACK);
+    tb_set_cell(x*2, y, ' ', TB_CYAN, TB_CYAN);
+    tb_set_cell(x*2+1, y, ' ', TB_CYAN, TB_CYAN);
 }
+void draw_char(int x, int y, int character) {
+    tb_set_cell(x, y, character, TB_CYAN, TB_BLACK);
+}
+
+void draw_circle(int x, int y, int r) {
+    int dx = 0;
+    int dy = r;
+    int p = 1 - r;
+
+    draw_pixel(x, y + r);
+    draw_pixel(x, y - r);
+    draw_pixel(x + r, y);
+    draw_pixel(x - r, y);
+
+    while (dx < dy) {
+        dx++;
+        if (p < 0) {
+            p = p + 2 * dx + 1;
+        }
+        else {
+            dy--;
+            p = p + 2 * (dx - dy) + 1;
+        }
+
+        draw_pixel(x + dx, y + dy);
+        draw_pixel(x - dx, y + dy);
+        draw_pixel(x + dx, y - dy);
+        draw_pixel(x - dx, y - dy);
+        draw_pixel(x + dy, y + dx);
+        draw_pixel(x - dy, y + dx);
+        draw_pixel(x + dy, y - dx);
+        draw_pixel(x - dy, y - dx);
+    }
+}
+
+int get_width() {
+    return tb_width();
+}
+int get_height() {
+    return tb_height();
+}
+
