@@ -1,14 +1,34 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+#define PARAM_NULL 0xFF
+
+#define SHAPE_PIXEL 0
+#define SHAPE_LINE 1
+#define SHAPE_CIRCLE 2
+#define SHAPE_RECTANGLE 3
+
+typedef struct shape {
+  int id;
+  int type;
+  int color;
+  int x;
+  int y;
+  int param1;
+  int param2;
+} shape;
+
+#define OBJECT_CIRCLE(id, color, x, y, r) (shape){ id, SHAPE_CIRCLE, color, x, y, r, PARAM_NULL };
+
+void add_object(shape* sh);
+void remove_object(int shape_id);
+
 void graphics_init();
 void graphics_destroy();
 void graphics_refresh();
 
-void draw_pixel(int x, int y);
-void draw_char(int x, int y, int character);
-void draw_line(int x1, int y1, int x2, int y2);
-void draw_circle(int x, int y, int r);
+void graphics_interact_mouse(int x, int y);
+void graphics_interact_key(int key, int ch);
 
 int get_width();
 int get_height();

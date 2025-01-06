@@ -1,90 +1,79 @@
 #include "graphics.h"
+#undef TB_IMPL
+#include "graphics_draw.h"
 #include "../libshared/termbox2.h"
+
+#include "../libstructures/syn_buffer.h"
+#include "../libstructures/sll.h"
+
+typedef struct render_thread_data {
+    syn_buffer buff;
+} render_thread_data;
+
+//pthread_t render_thread;
+sll objects;
+
+void* handle_render(void* arg) {
+
+}
+
+void redraw_shape(const shape * shape, const _Bool clear) {
+    int color = clear ? TB_BLACK : shape->color;
+    switch (shape->type) {
+        case SHAPE_PIXEL:
+            draw_pixel(shape->x, shape->y, color);
+            break;
+        case SHAPE_CIRCLE:
+            draw_circle(shape->x, shape->y, shape->param1, color);
+            break;
+        default:
+            break;
+    }
+}
+
+void draw_shape(void* shape) {
+    redraw_shape(shape, 0);
+}
 
 void graphics_init() {
     tb_init();
+    sll_init(&objects, sizeof(shape));
+    //pthread_create(&render_thread, NULL, &handle_render, NULL);
 }
 
 void graphics_destroy() {
     tb_shutdown();
+    sll_clear(&objects);
 }
 
 void graphics_refresh() {
     tb_present();
 }
 
-void draw_line(int x1, int y1, int x2, int y2) {
-    int dx = x2-x1, dy = y2-y1, sx = 1, sy = 1;
-    if (x1 > x2) {
-        dx = x1-x2;
-        sx = -1;
-    }
-    if (y1 > y2) {
-        dy = y1-y2;
-        sy = -1;
-    }
-    int err = dx - dy;
-
-    while (1) {
-        draw_pixel(y1, x1);
-        if (x1 == x2 && y1 == y2)
-            break;
-
-        const int e2 = err << 1;
-        if (e2 > -dy) {
-            err -= dy;
-            x1 += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y1 += sy;
-        }
-    }
+void add_object(shape* sh) {
+    sll_add(&objects, sh);
+    draw_shape(sh);
+    graphics_refresh();
 }
 
-void draw_pixel(int x, int y) {
-    tb_set_cell(x*2, y, ' ', TB_CYAN, TB_CYAN);
-    tb_set_cell(x*2+1, y, ' ', TB_CYAN, TB_CYAN);
-}
-void draw_char(int x, int y, int character) {
-    tb_set_cell(x, y, character, TB_CYAN, TB_BLACK);
-}
-
-void draw_circle(int x, int y, int r) {
-    int dx = 0;
-    int dy = r;
-    int p = 1 - r;
-
-    draw_pixel(x, y + r);
-    draw_pixel(x, y - r);
-    draw_pixel(x + r, y);
-    draw_pixel(x - r, y);
-
-    while (dx < dy) {
-        dx++;
-        if (p < 0) {
-            p = p + 2 * dx + 1;
+void remove_object(int shape_id) {
+    const size_t size = sll_get_size(&objects);
+    for (int i = 0; i < size; i++) {
+        shape out;
+        sll_get(&objects, i, &out);
+        redraw_shape(&out, 1);
+        if (out.id == shape_id) {
+            sll_remove(&objects, i);
         }
-        else {
-            dy--;
-            p = p + 2 * (dx - dy) + 1;
-        }
-
-        draw_pixel(x + dx, y + dy);
-        draw_pixel(x - dx, y + dy);
-        draw_pixel(x + dx, y - dy);
-        draw_pixel(x - dx, y - dy);
-        draw_pixel(x + dy, y + dx);
-        draw_pixel(x - dy, y + dx);
-        draw_pixel(x + dy, y - dx);
-        draw_pixel(x - dy, y - dx);
     }
+    sll_for_each(&objects, draw_shape);
+    graphics_refresh();
 }
 
 int get_width() {
     return tb_width();
 }
+
 int get_height() {
     return tb_height();
 }
-
