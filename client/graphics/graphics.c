@@ -1,8 +1,10 @@
 #include "graphics.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "../../libdraw/draw.h"
+#include "../../libshared/termbox2.h"
 
 #define M_ADD_SHAPE 0
 #define M_DEL_SHAPE 1
@@ -16,11 +18,31 @@ typedef struct render_message {
 
 #define MENU_WIDTH 16
 #define MENU_HEIGHT 8
+#define MENU_BG 0xfb
 
 void draw_menu(menu* m) {
     int w = get_width()>>2, h = get_height()>>1;
-    draw_pixel(w, h, 7);
-    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, 7, 0);
+    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, MENU_BG, 1);
+    draw_line(w - MENU_WIDTH, h - MENU_HEIGHT,
+        w - MENU_WIDTH, h + MENU_HEIGHT,
+        COLOR_BLACK, MENU_BG, '|');
+    draw_line(w + MENU_WIDTH, h - MENU_HEIGHT,
+        w + MENU_WIDTH, h + MENU_HEIGHT,
+        COLOR_BLACK, MENU_BG, '|');
+    draw_line(w - MENU_WIDTH, h + MENU_HEIGHT,
+        w + MENU_WIDTH, h + MENU_HEIGHT,
+        COLOR_BLACK, MENU_BG, '=');
+    draw_line(w - MENU_WIDTH, h - MENU_HEIGHT,
+        w + MENU_WIDTH, h - MENU_HEIGHT,
+        COLOR_BLACK, MENU_BG, '=');
+    const int len = (int)strlen(m->title);
+    draw_text(w - (len>>2), h - MENU_HEIGHT, m->title, COLOR_BLACK, MENU_BG, len % 2 == 0);
+    int offset = m->option_count>>1;
+    for (int i = 0; i < m->option_count; i++) {
+        int l = (int)strlen(m->options[i]->text);
+        int b = m->options[i]->selectable ? TB_REVERSE : 0;
+        draw_text(w - (l>>2), h - offset + i, m->options[i]->text, COLOR_RED | b, 0xfd | b, l % 2 == 0);
+    }
 }
 
 void redraw_screen(graphics_context* context) {
@@ -38,14 +60,13 @@ void menu_hide(graphics_context* context) {
     syn_buffer_add(&context->buffer, &m);
 }
 
-void redraw_shape(const shape * shape, const _Bool clear) {
-    int color = clear ? 0 : shape->color;
+void redraw_shape(const shape * shape) {
     switch (shape->type) {
         case SHAPE_PIXEL:
-            draw_pixel(shape->x, shape->y, color);
+            draw_pixel(shape->x, shape->y, shape->color);
         break;
         case SHAPE_CIRCLE:
-            draw_circle(shape->x, shape->y, shape->param1, color);
+            draw_circle(shape->x, shape->y, shape->param1, shape->color);
         break;
         default:
             break;
@@ -53,7 +74,7 @@ void redraw_shape(const shape * shape, const _Bool clear) {
 }
 
 void draw_shape(void* shape) {
-    redraw_shape(shape, 0);
+    redraw_shape(shape);
 }
 
 void m_add_object(graphics_context* context, shape* sh) {
@@ -69,7 +90,8 @@ void m_remove_object(graphics_context* context, int shape_id) {
         sll_get(&context->objects, i, &out);
         if (out.id == shape_id) {
             sll_remove(&context->objects, i);
-            redraw_shape(&out, 1);
+            out.color = COLOR_DEFAULT;
+            redraw_shape(&out);
         }
     }
     sll_for_each(&context->objects, draw_shape);
@@ -129,9 +151,9 @@ void add_object(graphics_context* context, shape* sh) {
     syn_buffer_add(&context->buffer, &m);
 }
 
-void remove_object(graphics_context* context, int shape_id) {
+void remove_object(graphics_context* context, int object_id) {
     int* obj_id = malloc(sizeof(int));
-    *obj_id = shape_id;
+    *obj_id = object_id;
     render_message m = (render_message){obj_id, M_DEL_SHAPE};
     syn_buffer_add(&context->buffer, &m);
 }

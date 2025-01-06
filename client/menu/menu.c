@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 void menu_init(menu* menu, int option_count, ...) {
+    menu->option_count = option_count;
     va_list arg;
     va_start(arg, option_count);
     menu->options = calloc(option_count, sizeof(menu_option));

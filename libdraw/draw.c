@@ -3,6 +3,7 @@
 
 void draw_init() {
     tb_init();
+    tb_set_output_mode(TB_OUTPUT_256);
 }
 
 void draw_destroy() {
@@ -21,7 +22,7 @@ int draw_get_height() {
     return tb_height();
 }
 
-void draw_line(int x1, int y1, int x2, int y2, int color) {
+void draw_line(int x1, int y1, int x2, int y2, int fg_color, int bg_color, int ch) {
     int dx = x2-x1, dy = y2-y1, sx = 1, sy = 1;
     if (x1 > x2) {
         dx = x1-x2;
@@ -34,7 +35,8 @@ void draw_line(int x1, int y1, int x2, int y2, int color) {
     int err = dx - dy;
 
     while (1) {
-        draw_pixel(x1, y1, color);
+        draw_char(x1*2, y1, ch, fg_color, bg_color);
+        draw_char(x1*2+1, y1, ch, fg_color, bg_color);
         if (x1 == x2 && y1 == y2)
             break;
 
@@ -54,8 +56,8 @@ void draw_pixel(int x, int y, int color) {
     tb_set_cell(x*2, y, ' ', TB_CYAN, color);
     tb_set_cell(x*2+1, y, ' ', TB_CYAN, color);
 }
-void draw_char(int x, int y, int character, int color) {
-    tb_set_cell(x, y, character, color, TB_BLACK);
+void draw_char(int x, int y, int character, int fg_color, int bg_color) {
+    tb_set_cell(x, y, character, fg_color, bg_color);
 }
 
 void draw_circle(int x, int y, int r, int color) {
@@ -98,9 +100,13 @@ void draw_rectangle(int x1, int y1, int x2, int y2, int color, _Bool fill) {
         }
     }
     else {
-        draw_line(x1, y1, x2, y1, color);
-        draw_line(x1, y1, x1, y2, color);
-        draw_line(x1, y2, x2, y2, color);
-        draw_line(x2, y1, x2, y2, color);
+        draw_line(x1, y1, x2, y1, color, color, ' ');
+        draw_line(x1, y1, x1, y2, color, color, ' ');
+        draw_line(x1, y2, x2, y2, color, color, ' ');
+        draw_line(x2, y1, x2, y2, color, color, ' ');
     }
+}
+
+void draw_text(int x, int y, char *text, int fg_color, int bg_color, _Bool plusone) {
+    tb_print((x*2) + (plusone ? 1 : 0), y, fg_color, bg_color, text);
 }

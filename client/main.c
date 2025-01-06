@@ -18,23 +18,26 @@ int main() {
 
     input_init(&input_on_key, &event_buffer);
 
-    shape c1 = OBJECT_CIRCLE(0, 2, 10, 10, 3);
-    shape c2 = OBJECT_CIRCLE(2, 2, 12, 10, 2)
-    shape c3 = OBJECT_CIRCLE(1, 2, 15, 13, 4);
+    shape c1 = OBJECT_CIRCLE(0, COLOR_RED, 10, 10, 3);
+    shape c2 = OBJECT_CIRCLE(2, COLOR_RED | COLOR_BRIGHT, 12, 10, 2)
+    shape c3 = OBJECT_CIRCLE(1, COLOR_RED, 15, 13, 4);
     add_object(&context, &c1);
     add_object(&context, &c2);
 
     menu m = MENU("testmenu");
-    menu_init(&m, 0);
-    menu_show(&context, &m);
+    menu_option opt = (menu_option){"  ONE         ", 0, NULL};
+    menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL};
+    menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, NULL};
+    menu_init(&m, 3, &opt, &opt2, &opt3);
 
     while (1) {
         int data;
         syn_buffer_get(&event_buffer, (void*)&data);
         if (data == 'q') break;
+        if (data == 'm') menu_show(&context, &m);
+        if (data == 'e') menu_hide(&context);
         add_object(&context, &c3);
         remove_object(&context, 0);
-        menu_hide(&context);
     }
 
     menu_destroy(&m);
