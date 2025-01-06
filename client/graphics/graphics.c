@@ -3,16 +3,40 @@
 #include <stdlib.h>
 
 #include "../../libdraw/draw.h"
-#include "../../libshared/termbox2.h"
 
 #define M_ADD_SHAPE 0
 #define M_DEL_SHAPE 1
 #define M_REDRAW 2
+#define M_MENU 3
 
 typedef struct render_message {
     void* data;
     char type;
 } render_message;
+
+#define MENU_WIDTH 16
+#define MENU_HEIGHT 8
+
+void draw_menu(menu* m) {
+    int w = get_width()>>2, h = get_height()>>1;
+    draw_pixel(w, h, 7);
+    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, 7, 0);
+}
+
+void redraw_screen(graphics_context* context) {
+    if (context->active_menu != NULL) draw_menu(context->active_menu);
+    draw_update();
+}
+
+void menu_show(graphics_context* context, menu* menu) {
+    render_message m = (render_message){menu, M_MENU};
+    syn_buffer_add(&context->buffer, &m);
+}
+
+void menu_hide(graphics_context* context) {
+    render_message m = (render_message){NULL, M_MENU};
+    syn_buffer_add(&context->buffer, &m);
+}
 
 void redraw_shape(const shape * shape, const _Bool clear) {
     int color = clear ? 0 : shape->color;
@@ -35,7 +59,7 @@ void draw_shape(void* shape) {
 void m_add_object(graphics_context* context, shape* sh) {
     sll_add(&context->objects, sh);
     draw_shape(sh);
-    graphics_refresh(context);
+    redraw_screen(context);
 }
 
 void m_remove_object(graphics_context* context, int shape_id) {
@@ -49,7 +73,7 @@ void m_remove_object(graphics_context* context, int shape_id) {
         }
     }
     sll_for_each(&context->objects, draw_shape);
-    graphics_refresh(context);
+    redraw_screen(context);
 }
 
 void* handle_render(void* arg) {
@@ -66,8 +90,17 @@ void* handle_render(void* arg) {
                 free(m.data);
                 break;
             case M_REDRAW:
-                draw_update();
+                redraw_screen(context);
                 break;
+            case M_MENU:
+                context->active_menu = m.data;
+                if (m.data == NULL) {
+                    int w = get_width()>>2, h = get_height()>>1;
+                    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, 0, 1);
+                    sll_for_each(&context->objects, draw_shape);
+                }
+                redraw_screen(context);
+            break;
             default:
                 break;
         }
@@ -78,6 +111,7 @@ void* handle_render(void* arg) {
 void graphics_init(graphics_context* context) {
     syn_buffer_init(&context->buffer, 16, sizeof(render_message));
     sll_init(&context->objects, sizeof(shape));
+    context->active_menu = NULL;
     draw_init();
     pthread_create(&context->render_thread, NULL, &handle_render, context);
 }

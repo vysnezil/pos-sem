@@ -34,7 +34,7 @@ void draw_line(int x1, int y1, int x2, int y2, int color) {
     int err = dx - dy;
 
     while (1) {
-        draw_pixel(y1, x1, color);
+        draw_pixel(x1, y1, color);
         if (x1 == x2 && y1 == y2)
             break;
 
@@ -86,5 +86,21 @@ void draw_circle(int x, int y, int r, int color) {
         draw_pixel(x - dy, y + dx, color);
         draw_pixel(x + dy, y - dx, color);
         draw_pixel(x - dy, y - dx, color);
+    }
+}
+
+void draw_rectangle(int x1, int y1, int x2, int y2, int color, _Bool fill) {
+    if (fill) {
+        for (int i = y1; i <= y2; i++) {
+            for (int j = x1; j <= x2; j++) {
+                draw_pixel(j, i, color);
+            }
+        }
+    }
+    else {
+        draw_line(x1, y1, x2, y1, color);
+        draw_line(x1, y1, x1, y2, color);
+        draw_line(x1, y2, x2, y2, color);
+        draw_line(x2, y1, x2, y2, color);
     }
 }
