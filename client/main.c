@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "libstructures/syn_buffer.h"
-#include "libgraphics/graphics.h"
-#include "libinput/input.h"
+#include "../libinput/input.h"
+#include "../libstructures/syn_buffer.h"
+#include "graphics/graphics.h"
 
 void input_on_key(int ch, int key, void* context) {
     syn_buffer* event_buffer = context;
@@ -19,8 +19,8 @@ int main() {
     input_init(&input_on_key, &event_buffer);
 
     shape c1 = OBJECT_CIRCLE(0, 2, 10, 10, 3);
-    shape c2 = (shape){ 1, SHAPE_CIRCLE, 2, 12, 10, 2, PARAM_NULL };
-    shape c3 = (shape){ 1, SHAPE_CIRCLE, 2, 15, 13, 4, PARAM_NULL };
+    shape c2 = OBJECT_CIRCLE(2, 2, 12, 10, 2)
+    shape c3 = OBJECT_CIRCLE(1, 2, 15, 13, 4);
     add_object(&c1);
     add_object(&c2);
 
@@ -29,10 +29,9 @@ int main() {
         syn_buffer_get(&event_buffer, (void*)&data);
         if (data == 'q') break;
         add_object(&c3);
-        remove_object(1);
+        remove_object(0);
     }
 
-    input_destroy();
     graphics_destroy();
     syn_buffer_free(&event_buffer);
     return 0;

@@ -1,5 +1,25 @@
-#include "graphics_draw.h"
+#include "draw.h"
 #include "../libshared/termbox2.h"
+
+void draw_init() {
+    tb_init();
+}
+
+void draw_destroy() {
+    tb_shutdown();
+}
+
+void draw_update() {
+    tb_present();
+}
+
+int draw_get_width() {
+    return tb_width();
+}
+
+int draw_get_height() {
+    return tb_height();
+}
 
 void draw_line(int x1, int y1, int x2, int y2, int color) {
     int dx = x2-x1, dy = y2-y1, sx = 1, sy = 1;

@@ -1,10 +1,8 @@
 #include "graphics.h"
-#undef TB_IMPL
-#include "graphics_draw.h"
-#include "../libshared/termbox2.h"
+#include "../../libdraw/draw.h"
 
-#include "../libstructures/syn_buffer.h"
-#include "../libstructures/sll.h"
+#include "../../libstructures/syn_buffer.h"
+#include "../../libstructures/sll.h"
 
 typedef struct render_thread_data {
     syn_buffer buff;
@@ -14,11 +12,11 @@ typedef struct render_thread_data {
 sll objects;
 
 void* handle_render(void* arg) {
-
+    //render thread, object click handler, menu object, keyboard handler)
 }
 
 void redraw_shape(const shape * shape, const _Bool clear) {
-    int color = clear ? TB_BLACK : shape->color;
+    int color = clear ? 0 : shape->color;
     switch (shape->type) {
         case SHAPE_PIXEL:
             draw_pixel(shape->x, shape->y, color);
@@ -36,18 +34,18 @@ void draw_shape(void* shape) {
 }
 
 void graphics_init() {
-    tb_init();
+    draw_init();
     sll_init(&objects, sizeof(shape));
     //pthread_create(&render_thread, NULL, &handle_render, NULL);
 }
 
 void graphics_destroy() {
-    tb_shutdown();
+    draw_destroy();
     sll_clear(&objects);
 }
 
 void graphics_refresh() {
-    tb_present();
+    draw_update();
 }
 
 void add_object(shape* sh) {
@@ -61,9 +59,9 @@ void remove_object(int shape_id) {
     for (int i = 0; i < size; i++) {
         shape out;
         sll_get(&objects, i, &out);
-        redraw_shape(&out, 1);
         if (out.id == shape_id) {
             sll_remove(&objects, i);
+            redraw_shape(&out, 1);
         }
     }
     sll_for_each(&objects, draw_shape);
@@ -71,9 +69,9 @@ void remove_object(int shape_id) {
 }
 
 int get_width() {
-    return tb_width();
+    return draw_get_width();
 }
 
 int get_height() {
-    return tb_height();
+    return draw_get_height();
 }
