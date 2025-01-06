@@ -1,5 +1,9 @@
-#ifndef DRAW_H
-#define DRAW_H
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
+
+#include <pthread.h>
+#include "../../libstructures/syn_buffer.h"
+#include "../../libstructures/sll.h"
 
 #define PARAM_NULL 0xFF
 
@@ -18,17 +22,20 @@ typedef struct shape {
   int param2;
 } shape;
 
+typedef struct graphics_context {
+  pthread_t render_thread;
+  sll objects;
+  syn_buffer buffer;
+} graphics_context;
+
 #define OBJECT_CIRCLE(id, color, x, y, r) (shape){ id, SHAPE_CIRCLE, color, x, y, r, PARAM_NULL };
 
-void add_object(shape* sh);
-void remove_object(int shape_id);
+void add_object(graphics_context* context, shape* sh);
+void remove_object(graphics_context* context, int shape_id);
 
-void graphics_init();
-void graphics_destroy();
-void graphics_refresh();
-
-void graphics_interact_mouse(int x, int y);
-void graphics_interact_key(int key, int ch);
+void graphics_init(graphics_context* context);
+void graphics_destroy(graphics_context* context);
+void graphics_refresh(graphics_context* context);
 
 int get_width();
 int get_height();

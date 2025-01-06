@@ -18,6 +18,7 @@ typedef struct sll {
 
 void sll_init(sll* this, size_t dataSize);
 void sll_clear(sll* this);
+void sll_destroy(sll* this);
 size_t sll_get_size(const sll* this);
 _Bool sll_get(sll* this, size_t index, void* out);
 _Bool sll_add(sll* this, void* data);

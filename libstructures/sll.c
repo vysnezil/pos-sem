@@ -34,6 +34,7 @@ void sll_init(sll* this, size_t dataSize)
     this->tail_ = NULL;
     this->size_ = 0;
     this->dataSize_ = dataSize;
+    pthread_mutex_init(&(this->mutex_), NULL);
 }
 
 void sll_clear(sll* this)
@@ -48,6 +49,11 @@ void sll_clear(sll* this)
     this->head_ = NULL;
     this->size_ = 0;
     pthread_mutex_unlock(&this->mutex_);
+}
+
+void sll_destroy(sll* this) {
+    sll_clear(this);
+    pthread_mutex_destroy(&this->mutex_);
 }
 
 size_t sll_get_size(const sll* this)
