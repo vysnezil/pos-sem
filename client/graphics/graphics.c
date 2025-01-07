@@ -17,8 +17,12 @@ typedef struct render_message {
 } render_message;
 
 void redraw_screen(graphics_context* context) {
-    if (context->active_menu != NULL && context->active_menu->data != NULL) {
+    if (context->active_menu != NULL) {
+        pthread_mutex_lock(&context->active_menu->mutex);
+        if (context->active_menu->data != NULL) {
         context->active_menu->renderer(context, context->active_menu);
+        }
+        pthread_mutex_unlock(&context->active_menu->mutex);
     }
     draw_update();
 }

@@ -1,5 +1,6 @@
 #ifndef MENU_H
 #define MENU_H
+#include <pthread.h>
 
 #define MENU_TYPE_NOT_INIT -1
 
@@ -13,6 +14,7 @@ typedef struct menu {
     void(*free_func)(struct menu*);
     void(*on_key)(struct menu*, int key, int ch);
     char* title;
+    pthread_mutex_t mutex;
 } menu;
 
 #define MENU(name) (menu){.title = name, .type = MENU_TYPE_NOT_INIT};

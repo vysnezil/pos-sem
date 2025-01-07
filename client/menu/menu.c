@@ -5,5 +5,6 @@ void menu_destroy(menu* menu) {
 }
 
 void menu_input_key(menu* menu, int key, int ch) {
+    if (menu == NULL) return;
     menu->on_key(menu, key, ch);
 }

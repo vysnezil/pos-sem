@@ -1,9 +1,11 @@
 #include <pthread.h>
 
+#include "../libdraw/draw.h"
 #include "../libinput/input.h"
 #include "../libstructures/syn_buffer.h"
 #include "graphics/graphics.h"
 #include "menu/basic_menu.h"
+#include "menu/input_menu.h"
 
 void on_select(void* data) {
     menu_hide(data);
@@ -47,6 +49,11 @@ void input_on_event(struct tb_event* ev, void* context) {
     }
 }
 
+void in_menu_callback(char* data, void* context) {
+    menu_hide(context);
+    // do something
+}
+
 int main() {
     syn_buffer event_buffer;
     syn_buffer_init(&event_buffer, 16, sizeof(event_message));
@@ -70,7 +77,11 @@ int main() {
     menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, on_select_exit, &run};
     menu_option opt4 = (menu_option){"  THREEdd  ", 1, on_select_exit, &run};
     basic_menu_init(&m, 4, &opt, &opt2, &opt3, &opt4);
-    menu_show(&context, &m);
+    //menu_show(&context, &m);
+
+    menu in = MENU("inputtest");
+    input_menu_init("Enter value:", &in, in_menu_callback, &context);
+    menu_show(&context, &in);
 
     while (run) {
         event_message message;
@@ -79,14 +90,19 @@ int main() {
             input_event_data* ev_data = message.data;
             int key = ev_data->key, ch = ev_data->ch;
             free(ev_data);
-            if (ch == 'q') break;
-            if (ch == 'm') menu_show(&context, &m);
-            menu_input_key(&m, key, ch);
+
+            if (context.active_menu != NULL) menu_input_key(context.active_menu, key, ch);
+            else {
+                if (ch == 'q') break;
+                if (ch == 'm') menu_show(&context, &m);
+            }
+
             graphics_refresh(&context);
         }
     }
 
     menu_destroy(&m);
+    menu_destroy(&in);
     input_destroy();
     graphics_destroy(&context);
     syn_buffer_free(&event_buffer);
