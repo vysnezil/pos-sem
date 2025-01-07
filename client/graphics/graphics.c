@@ -16,38 +16,10 @@ typedef struct render_message {
     char type;
 } render_message;
 
-#define MENU_WIDTH 16
-#define MENU_HEIGHT 8
-#define MENU_BG 0xfb
-
-void draw_menu(menu* m) {
-    int w = get_width()>>2, h = get_height()>>1;
-    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, MENU_BG, 1);
-    draw_line(w - MENU_WIDTH, h - MENU_HEIGHT,
-        w - MENU_WIDTH, h + MENU_HEIGHT,
-        COLOR_BLACK, MENU_BG, '|');
-    draw_line(w + MENU_WIDTH, h - MENU_HEIGHT,
-        w + MENU_WIDTH, h + MENU_HEIGHT,
-        COLOR_BLACK, MENU_BG, '|');
-    draw_line(w - MENU_WIDTH, h + MENU_HEIGHT,
-        w + MENU_WIDTH, h + MENU_HEIGHT,
-        COLOR_BLACK, MENU_BG, '=');
-    draw_line(w - MENU_WIDTH, h - MENU_HEIGHT,
-        w + MENU_WIDTH, h - MENU_HEIGHT,
-        COLOR_BLACK, MENU_BG, '=');
-    const int len = (int)strlen(m->title);
-    draw_text(w - (len>>2), h - MENU_HEIGHT, m->title, COLOR_BLACK, MENU_BG, len % 2 == 0);
-    int offset = m->option_count>>1;
-    for (int i = 0; i < m->option_count; i++) {
-        int l = (int)strlen(m->options[i]->text);
-        int b = i == m->selected ? TB_REVERSE : 0;
-        draw_text(w - (l>>2), h - offset + i, m->options[i]->text,
-            COLOR_RED | b, (MENU_BG + 2) | b, l % 2 == 0);
-    }
-}
-
 void redraw_screen(graphics_context* context) {
-    if (context->active_menu != NULL && context->active_menu->option_count != -1) draw_menu(context->active_menu);
+    if (context->active_menu != NULL && context->active_menu->data != NULL) {
+        context->active_menu->renderer(context, context->active_menu);
+    }
     draw_update();
 }
 
@@ -118,8 +90,8 @@ void* handle_render(void* arg) {
             case M_MENU:
                 context->active_menu = m.data;
                 if (m.data == NULL) {
-                    int w = get_width()>>2, h = get_height()>>1;
-                    draw_rectangle(w - MENU_WIDTH, h - MENU_HEIGHT, w + MENU_WIDTH, h + MENU_HEIGHT, 0, 1);
+                    int w = get_width()>>1, h = get_height();
+                    draw_rectangle(0, 0, w, h, COLOR_DEFAULT, 1);
                     sll_for_each(&context->objects, draw_shape);
                 }
                 redraw_screen(context);

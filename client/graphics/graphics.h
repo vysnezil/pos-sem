@@ -15,7 +15,9 @@
 #define COLOR_MAGENTA 5
 #define COLOR_CYAN 6
 #define COLOR_WHITE 7
+
 #define COLOR_BRIGHT 8
+#define COLOR_REVERSE 0x400
 
 #define PARAM_NULL 0xFF
 

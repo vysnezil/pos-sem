@@ -3,6 +3,7 @@
 #include "../libinput/input.h"
 #include "../libstructures/syn_buffer.h"
 #include "graphics/graphics.h"
+#include "menu/basic_menu.h"
 
 void on_select(void* data) {
     menu_hide(data);
@@ -13,6 +14,8 @@ void on_select_exit(void* data) {
 }
 
 #define INPUT_EVENT 0
+
+//today: object mouse, menu labels, menu input text, split this, network thread,  (opt menu mouse?),
 
 typedef struct event_message {
     void* data;
@@ -53,7 +56,7 @@ int main() {
     menu_option opt = (menu_option){"  ONE         ", 0, on_select, &context};
     menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL, NULL};
     menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, on_select_exit, &run};
-    menu_init(&m, 3, &opt, &opt2, &opt3);
+    basic_menu_init(&m, 3, &opt, &opt2, &opt3);
     menu_show(&context, &m);
 
     while (run) {
