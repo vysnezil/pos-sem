@@ -8,12 +8,12 @@ void basic_menu_input(menu* menu, int key, int ch) {
     basic_menu_data* data = menu->data;
     switch (key) {
         case KEY_UP:
-            data->selected++;
-            if (data->selected >= data->option_count) data->selected = 0;
+            while (data->options[(++data->selected)%data->option_count]->selectable == 0) { }
+            data->selected %= data->option_count;
         break;
         case KEY_DOWN:
-            data->selected--;
-            if (data->selected < 0) data->selected = data->option_count - 1;
+            while (data->options[(--data->selected)%data->option_count]->selectable == 0) { }
+            data->selected %= data->option_count;
         break;
         case KEY_ENTER:
             if (data->options[data->selected]->on_select != NULL)
@@ -72,9 +72,11 @@ void basic_menu_renderer(graphics_context* context, menu* m) {
     basic_menu_data* data = m->data;
     int offset = data->option_count>>1;
     for (int i = 0; i < data->option_count; i++) {
-        int l = (int)strlen(data->options[i]->text);
-        int b = i == data->selected ? COLOR_REVERSE : 0;
-        draw_text(w - (l>>2), h - offset + i, data->options[i]->text,
-            COLOR_RED | b, (MENU_BG + 2) | b, l % 2 == 0);
+        menu_option* option = data->options[i];
+        int l = (int)strlen(option->text);
+        int bg_color = MENU_BG;
+        if (option->selectable) bg_color = i == data->selected ? bg_color | COLOR_REVERSE : bg_color + 2;
+        draw_text(w - (l>>2), h - offset + i, option->text,
+            COLOR_RED, bg_color, l % 2 == 0);
     }
 }

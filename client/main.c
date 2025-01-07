@@ -53,7 +53,7 @@ int main() {
 
     graphics_context context;
     graphics_init(&context);
-    struct input_context i_context = (struct input_context){&event_buffer, &context};
+    input_context i_context = (struct input_context){&event_buffer, &context};
 
     input_init(&input_on_key, &i_context, &input_on_event);
 
@@ -65,10 +65,11 @@ int main() {
     _Bool run = 1;
 
     menu m = MENU("testmenu");
-    menu_option opt = (menu_option){"  ONE         ", 0, on_select, &context};
+    menu_option opt = (menu_option){"  ONE         ", 1, on_select, &context};
     menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL, NULL};
     menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, on_select_exit, &run};
-    basic_menu_init(&m, 3, &opt, &opt2, &opt3);
+    menu_option opt4 = (menu_option){"  THREEdd  ", 1, on_select_exit, &run};
+    basic_menu_init(&m, 4, &opt, &opt2, &opt3, &opt4);
     menu_show(&context, &m);
 
     while (run) {

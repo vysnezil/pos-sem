@@ -16,7 +16,7 @@ typedef struct menu_option {
 typedef struct basic_menu_data {
     int option_count;
     menu_option** options;
-    atomic_int selected;
+    atomic_uint selected;
 } basic_menu_data;
 
 void basic_menu_init(menu* menu, int option_count, ...);
