@@ -40,13 +40,14 @@ void draw_menu(menu* m) {
     int offset = m->option_count>>1;
     for (int i = 0; i < m->option_count; i++) {
         int l = (int)strlen(m->options[i]->text);
-        int b = m->options[i]->selectable ? TB_REVERSE : 0;
-        draw_text(w - (l>>2), h - offset + i, m->options[i]->text, COLOR_RED | b, 0xfd | b, l % 2 == 0);
+        int b = i == m->selected ? TB_REVERSE : 0;
+        draw_text(w - (l>>2), h - offset + i, m->options[i]->text,
+            COLOR_RED | b, (MENU_BG + 2) | b, l % 2 == 0);
     }
 }
 
 void redraw_screen(graphics_context* context) {
-    if (context->active_menu != NULL) draw_menu(context->active_menu);
+    if (context->active_menu != NULL && context->active_menu->option_count != -1) draw_menu(context->active_menu);
     draw_update();
 }
 
@@ -139,6 +140,7 @@ void graphics_init(graphics_context* context) {
 }
 
 void graphics_destroy(graphics_context* context) {
+    menu_hide(context);
     pthread_cancel(context->render_thread);
     pthread_join(context->render_thread, NULL);
     sll_destroy(&context->objects);

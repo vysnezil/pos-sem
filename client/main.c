@@ -4,14 +4,38 @@
 #include "../libstructures/syn_buffer.h"
 #include "graphics/graphics.h"
 
+void on_select(void* data) {
+    menu_hide(data);
+}
+
+void on_select_exit(void* data) {
+    *(_Bool*)data = 0;
+}
+
+#define INPUT_EVENT 0
+
+typedef struct event_message {
+    void* data;
+    int type;
+} event_message;
+
+typedef struct input_event_data {
+    int key;
+    int ch;
+} input_event_data;
+
 void input_on_key(int ch, int key, void* context) {
     syn_buffer* event_buffer = context;
-    syn_buffer_add(event_buffer, &ch);
+    input_event_data* event_data = malloc(sizeof(input_event_data));
+    event_data->key = key;
+    event_data->ch = ch;
+    event_message m = (event_message) {event_data, INPUT_EVENT};
+    syn_buffer_add(event_buffer, &m);
 }
 
 int main() {
     syn_buffer event_buffer;
-    syn_buffer_init(&event_buffer, 16, sizeof(int));
+    syn_buffer_init(&event_buffer, 16, sizeof(event_message));
 
     graphics_context context;
     graphics_init(&context);
@@ -20,29 +44,35 @@ int main() {
 
     shape c1 = OBJECT_CIRCLE(0, COLOR_RED, 10, 10, 3);
     shape c2 = OBJECT_CIRCLE(2, COLOR_RED | COLOR_BRIGHT, 12, 10, 2)
-    shape c3 = OBJECT_CIRCLE(1, COLOR_RED, 15, 13, 4);
     add_object(&context, &c1);
     add_object(&context, &c2);
 
-    menu m = MENU("testmenu");
-    menu_option opt = (menu_option){"  ONE         ", 0, NULL};
-    menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL};
-    menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, NULL};
-    menu_init(&m, 3, &opt, &opt2, &opt3);
+    _Bool run = 1;
 
-    while (1) {
-        int data;
-        syn_buffer_get(&event_buffer, (void*)&data);
-        if (data == 'q') break;
-        if (data == 'm') menu_show(&context, &m);
-        if (data == 'e') menu_hide(&context);
-        add_object(&context, &c3);
-        remove_object(&context, 0);
+    menu m = MENU("testmenu");
+    menu_option opt = (menu_option){"  ONE         ", 0, on_select, &context};
+    menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL, NULL};
+    menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, on_select_exit, &run};
+    menu_init(&m, 3, &opt, &opt2, &opt3);
+    menu_show(&context, &m);
+
+    while (run) {
+        event_message message;
+        syn_buffer_get(&event_buffer, (void*)&message);
+        if (message.type == INPUT_EVENT) {
+            input_event_data* ev_data = message.data;
+            int key = ev_data->key, ch = ev_data->ch;
+            free(ev_data);
+            if (ch == 'q') break;
+            if (ch == 'm') menu_show(&context, &m);
+            menu_input_key(&m, key, ch);
+            graphics_refresh(&context);
+        }
     }
 
     menu_destroy(&m);
-    graphics_destroy(&context);
     input_destroy();
+    graphics_destroy(&context);
     syn_buffer_free(&event_buffer);
     return 0;
 }

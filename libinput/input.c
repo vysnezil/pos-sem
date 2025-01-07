@@ -1,5 +1,4 @@
 #include "input.h"
-#include "../libshared/termbox2.h"
 #include <pthread.h>
 
 pthread_t input_thread;
