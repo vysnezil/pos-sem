@@ -27,13 +27,24 @@ typedef struct input_event_data {
     int ch;
 } input_event_data;
 
+typedef struct input_context {
+    syn_buffer* event_buffer;
+    graphics_context* context;
+} input_context;
+
 void input_on_key(int ch, int key, void* context) {
-    syn_buffer* event_buffer = context;
+    syn_buffer* event_buffer = ((input_context*)context)->event_buffer;
     input_event_data* event_data = malloc(sizeof(input_event_data));
     event_data->key = key;
     event_data->ch = ch;
     event_message m = (event_message) {event_data, INPUT_EVENT};
     syn_buffer_add(event_buffer, &m);
+}
+
+void input_on_event(struct tb_event* ev, void* context) {
+    if (ev->type == TB_EVENT_RESIZE) {
+        graphics_refresh(((input_context*)context)->context);
+    }
 }
 
 int main() {
@@ -42,8 +53,9 @@ int main() {
 
     graphics_context context;
     graphics_init(&context);
+    struct input_context i_context = (struct input_context){&event_buffer, &context};
 
-    input_init(&input_on_key, &event_buffer);
+    input_init(&input_on_key, &i_context, &input_on_event);
 
     shape c1 = OBJECT_CIRCLE(0, COLOR_RED, 10, 10, 3);
     shape c2 = OBJECT_CIRCLE(2, COLOR_RED | COLOR_BRIGHT, 12, 10, 2)

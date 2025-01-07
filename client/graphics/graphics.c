@@ -85,6 +85,8 @@ void* handle_render(void* arg) {
                 free(m.data);
                 break;
             case M_REDRAW:
+                tb_clear();
+                sll_for_each(&context->objects, draw_shape);
                 redraw_screen(context);
                 break;
             case M_MENU:

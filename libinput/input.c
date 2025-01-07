@@ -5,6 +5,7 @@ pthread_t input_thread;
 
 typedef struct input_thread_data {
     void (*key_callback)(int,int,void*);
+    void (*other_callback)(struct tb_event*, void*);
     void* context;
 } input_thread_data;
 
@@ -19,18 +20,20 @@ void* handle_input(void* arg) {
                 (*data.key_callback)(ev.ch, ev.key, data.context);
                 break;
             default:
+                if (data.other_callback != NULL) (*data.other_callback)(&ev, data.context);
                 break;
         }
     }
     return NULL;
 }
 
-void input_init(void (*callback)(int,int,void*), void* context) {
+void input_init(void (*callback)(int,int,void*), void* context, void (*other_callback)(struct tb_event*, void*)) {
     tb_init();
     tb_set_cursor(0,0);
     input_thread_data* t_data = malloc(sizeof(input_thread_data));
     t_data->key_callback = callback;
     t_data->context = context;
+    t_data->other_callback = other_callback;
     pthread_create(&input_thread, NULL, &handle_input, t_data);
 }
 
