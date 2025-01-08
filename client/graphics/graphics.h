@@ -25,6 +25,7 @@
 #define SHAPE_LINE 1
 #define SHAPE_CIRCLE 2
 #define SHAPE_RECTANGLE 3
+#define SHAPE_TEXT 4
 
 typedef struct shape {
   int id;
@@ -48,6 +49,7 @@ typedef struct graphics_context {
 
 void add_object(graphics_context* context, shape* sh);
 void remove_object(graphics_context* context, int object_id);
+void change_object_color(graphics_context* context, int object_id, int color);
 
 void graphics_init(graphics_context* context);
 void graphics_destroy(graphics_context* context);

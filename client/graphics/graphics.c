@@ -37,12 +37,15 @@ void menu_hide(graphics_context* context) {
     syn_buffer_add(&context->buffer, &m);
 }
 
-void redraw_shape(const shape * shape) {
+void redraw_shape(const shape* shape) {
     switch (shape->type) {
         case SHAPE_PIXEL:
             draw_pixel(shape->x, shape->y, shape->color);
-        break;
+            break;
         case SHAPE_CIRCLE:
+            draw_circle(shape->x, shape->y, shape->param1, shape->color);
+            break;
+        case SHAPE_TEXT:
             draw_circle(shape->x, shape->y, shape->param1, shape->color);
         break;
         default:
@@ -140,6 +143,19 @@ void remove_object(graphics_context* context, int object_id) {
     *obj_id = object_id;
     render_message m = (render_message){obj_id, M_DEL_SHAPE};
     syn_buffer_add(&context->buffer, &m);
+}
+
+void change_object_color(graphics_context* context, int object_id, int color) {
+    for (int i = 0; i < sll_get_size(&context->objects); i++) {
+        shape out;
+        sll_get(&context->objects, i, &out);
+        if (out.id == object_id) {
+            out.color = color;
+            sll_set(&context->objects, i, &out);
+            break;
+        }
+    }
+    graphics_refresh(context);
 }
 
 void graphics_refresh(graphics_context* context) {

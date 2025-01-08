@@ -18,6 +18,8 @@ typedef struct basic_menu_data {
     atomic_uint selected;
 } basic_menu_data;
 
+#define MENU_LABEL(text) (menu_option){text, 0, NULL, NULL};
+
 void basic_menu_init(menu* menu, int option_count, ...);
 
 #endif
