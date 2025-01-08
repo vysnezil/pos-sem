@@ -19,16 +19,15 @@ typedef struct render_message {
 void redraw_screen(graphics_context* context) {
     tb_hide_cursor();
     if (context->active_menu != NULL) {
-        pthread_mutex_lock(&context->active_menu->mutex);
         if (context->active_menu->data != NULL) {
             context->active_menu->renderer(context, context->active_menu);
         }
-        pthread_mutex_unlock(&context->active_menu->mutex);
     }
     draw_update();
 }
 
 void menu_show(graphics_context* context, menu* menu) {
+    menu_hide(context);
     render_message m = (render_message){menu, M_MENU};
     syn_buffer_add(&context->buffer, &m);
 }
@@ -95,6 +94,7 @@ void* handle_render(void* arg) {
                 redraw_screen(context);
                 break;
             case M_MENU:
+                pthread_mutex_lock(&context->menu_mutex);
                 context->active_menu = m.data;
                 if (m.data == NULL) {
                     int w = get_width()>>1, h = get_height();
@@ -102,6 +102,7 @@ void* handle_render(void* arg) {
                     sll_for_each(&context->objects, draw_shape);
                 }
                 redraw_screen(context);
+                pthread_mutex_unlock(&context->menu_mutex);
             break;
             default:
                 break;
@@ -113,6 +114,7 @@ void* handle_render(void* arg) {
 void graphics_init(graphics_context* context) {
     syn_buffer_init(&context->buffer, 16, sizeof(render_message));
     sll_init(&context->objects, sizeof(shape));
+    pthread_mutex_init(&context->menu_mutex, NULL);
     context->active_menu = NULL;
     draw_init();
     pthread_create(&context->render_thread, NULL, &handle_render, context);
@@ -124,6 +126,7 @@ void graphics_destroy(graphics_context* context) {
     pthread_join(context->render_thread, NULL);
     sll_destroy(&context->objects);
     syn_buffer_free(&context->buffer);
+    pthread_mutex_destroy(&context->menu_mutex);
     draw_destroy();
 }
 

@@ -17,7 +17,7 @@ void on_select_exit(void* data) {
 
 #define INPUT_EVENT 0
 
-//today: object mouse, menu labels, menu input text, split this, network thread,  (opt menu mouse?),
+//today: object mouse, split this, game logic, network thread),
 
 typedef struct event_message {
     void* data;
@@ -50,8 +50,18 @@ void input_on_event(struct tb_event* ev, void* context) {
 }
 
 void in_menu_callback(char* data, void* context) {
+    graphics_context* d = context;
+    menu_destroy(d->active_menu);
+    free(d->active_menu);
     menu_hide(context);
-    // do something
+}
+
+
+void menu_call_input(void* data) {
+    menu* in = malloc(sizeof(menu));
+    in->title = "Inputtest";
+    input_menu_init("Enter value:", in, in_menu_callback, data);
+    menu_show(data, in);
 }
 
 int main() {
@@ -73,15 +83,11 @@ int main() {
 
     menu m = MENU("testmenu");
     menu_option opt = (menu_option){"  ONE         ", 1, on_select, &context};
-    menu_option opt2 = (menu_option){"  TWO OPT     ", 1, NULL, NULL};
+    menu_option opt2 = (menu_option){"  TWO OPT     ", 1, menu_call_input, &context};
     menu_option opt3 = (menu_option){"  THREEOPTED  ", 0, on_select_exit, &run};
     menu_option opt4 = (menu_option){"  THREEdd  ", 1, on_select_exit, &run};
     basic_menu_init(&m, 4, &opt, &opt2, &opt3, &opt4);
     //menu_show(&context, &m);
-
-    menu in = MENU("inputtest");
-    input_menu_init("Enter value:", &in, in_menu_callback, &context);
-    menu_show(&context, &in);
 
     while (run) {
         event_message message;
@@ -91,18 +97,19 @@ int main() {
             int key = ev_data->key, ch = ev_data->ch;
             free(ev_data);
 
+            pthread_mutex_lock(&context.menu_mutex);
             if (context.active_menu != NULL) menu_input_key(context.active_menu, key, ch);
             else {
                 if (ch == 'q') break;
                 if (ch == 'm') menu_show(&context, &m);
             }
+            pthread_mutex_unlock(&context.menu_mutex);
 
             graphics_refresh(&context);
         }
     }
 
     menu_destroy(&m);
-    menu_destroy(&in);
     input_destroy();
     graphics_destroy(&context);
     syn_buffer_free(&event_buffer);

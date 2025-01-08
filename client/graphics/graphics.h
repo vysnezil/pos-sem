@@ -41,6 +41,7 @@ typedef struct graphics_context {
   sll objects;
   syn_buffer buffer;
   menu* active_menu;
+  pthread_mutex_t menu_mutex;
 } graphics_context;
 
 #define OBJECT_CIRCLE(id, color, x, y, r) (shape){ id, SHAPE_CIRCLE, color, x, y, r, PARAM_NULL };

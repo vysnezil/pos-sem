@@ -5,7 +5,6 @@
 #include "renderer.h"
 
 void basic_menu_input(menu* menu, int key, int ch) {
-    pthread_mutex_lock(&menu->mutex);
     basic_menu_data* data = menu->data;
     switch (key) {
         case KEY_UP:
@@ -23,7 +22,6 @@ void basic_menu_input(menu* menu, int key, int ch) {
         default:
             break;
     }
-    pthread_mutex_unlock(&menu->mutex);
 }
 
 void basic_menu_destroy(menu* m) {
@@ -32,7 +30,6 @@ void basic_menu_destroy(menu* m) {
     data->options = NULL;
     free(data);
     m->data = NULL;
-    pthread_mutex_destroy(&m->mutex);
 }
 
 void basic_menu_renderer(graphics_context* context, menu* m) {
@@ -58,8 +55,6 @@ void basic_menu_init(menu* menu, int option_count, ...) {
     menu->on_key = basic_menu_input;
     basic_menu_data* data = malloc(sizeof(basic_menu_data));
     menu->data = data;
-    pthread_mutex_init(&menu->mutex, NULL);
-
     data->option_count = option_count;
     va_list arg;
     va_start(arg, option_count);
