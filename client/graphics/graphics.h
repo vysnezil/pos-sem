@@ -29,6 +29,8 @@ void graphics_init(graphics_context* context);
 void graphics_destroy(graphics_context* context);
 // objects is object context
 void graphics_refresh(graphics_context* context, void* objects);
+// obj, object to draw with context set
+void graphics_force_draw(graphics_context* context, void* obj);
 
 void menu_show(graphics_context* context, menu* menu);
 void menu_hide(graphics_context* context);

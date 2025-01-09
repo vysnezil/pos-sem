@@ -83,9 +83,9 @@ void menu_call_input(void* data) {
     menu_show(data, in);
 }
 
-void on_circle(object* object, void* context) {
-    remove_object(object->object_context, object->id);
-    //free_object(object);
+void on_circle(object* obj, void* context) {
+    pthread_mutex_unlock(&obj->object_context->mutex);
+    remove_object(obj->object_context, obj->id);
 }
 
 int main() {
@@ -151,15 +151,13 @@ int main() {
             free(ev_data);
             if (!objects_click(&object_context, x, y)) {
                 object c;
-                circle_init(&c, shapez++, x>>1, y, COLOR_RED, 3, on_circle, NULL);
+                circle_init(&c, shapez++, x>>1, y, (shapez%6)+1, 3, on_circle, NULL);
                 add_object(&object_context, &c);
             }
         }
     }
 
     menu_destroy(&m);
-    free_object(&circle);
-    free_object(&circle2);
     object_context_free(&object_context);
     input_destroy();
     graphics_destroy(&context);

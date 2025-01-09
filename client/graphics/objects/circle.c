@@ -6,8 +6,10 @@ void set_circle_pixel(int x, int y, void* context) {
     object* obj = (object*)context;
     draw_pixel(x, y, obj->color);
     char pix = (obj->color == COLOR_DEFAULT) ? (char)0xFF : (char)obj->id;
-    obj->object_context->screen[y * obj->object_context->screen_width + (x*2)] = pix;
-    obj->object_context->screen[y * obj->object_context->screen_width + (x*2+1)] = pix;
+    object_context* con = obj->object_context;
+    if (x < 0 || (x*2+1) >= con->screen_width || y < 0 || y >= con->screen_height) return;
+    con->screen[y * con->screen_width + x*2] = pix;
+    con->screen[y * con->screen_width + (x*2+1)] = pix;
 }
 
 void circle_render(graphics_context* context, object* object) {

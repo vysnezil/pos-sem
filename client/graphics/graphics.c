@@ -12,6 +12,7 @@
 #define M_DEL_SHAPE 1
 #define M_REDRAW 2
 #define M_MENU 3
+#define M_FORCE_DRAW 4
 
 typedef struct render_message {
     void* data;
@@ -39,6 +40,10 @@ void menu_hide(graphics_context* context) {
     syn_buffer_add(&context->buffer, &m);
 }
 
+void draw_object(object* obj, graphics_context* context) {
+    obj->renderer(obj->object_context->graphics, obj);
+}
+
 void* handle_render(void* arg) {
     graphics_context* context = arg;
     while (1) {
@@ -50,14 +55,21 @@ void* handle_render(void* arg) {
                 object_context* obj = m.data;
                 if (obj != NULL) {
                     pthread_mutex_lock(&obj->mutex);
-                    const size_t size = sll_get_size(&obj->objects);
-                    for (int i = 0; i < size; i++) {
-                        object out;
-                        sll_get(&obj->objects, i, &out);
-                        // passing a copy should be fine
-                        out.renderer(obj->graphics, &out);
-                    }
+                    sll_for_each(&obj->objects, draw_object, NULL);
                     pthread_mutex_unlock(&obj->mutex);
+                }
+                redraw_screen(context);
+                break;
+            case M_FORCE_DRAW:
+                object* object = m.data;
+                if (object == NULL) break;
+                pthread_mutex_lock(&object->object_context->mutex);
+                object->renderer(object->object_context->graphics, object);
+                pthread_mutex_unlock(&object->object_context->mutex);
+                // if object have default color, it will be freed!
+                if (object->color == COLOR_DEFAULT) {
+                    free_object(object);
+                    free(object);
                 }
                 redraw_screen(context);
                 break;
@@ -98,6 +110,11 @@ void graphics_destroy(graphics_context* context) {
 // objects is object context
 void graphics_refresh(graphics_context* context, void* objects) {
     render_message m = (render_message){objects, M_REDRAW};
+    syn_buffer_add(&context->buffer, &m);
+}
+
+void graphics_force_draw(graphics_context* context, void* obj) {
+    render_message m = (render_message){obj, M_FORCE_DRAW};
     syn_buffer_add(&context->buffer, &m);
 }
 

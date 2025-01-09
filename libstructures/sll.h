@@ -13,7 +13,6 @@ typedef struct sll {
     sll_node* tail_;
     size_t size_;
     size_t dataSize_;
-    pthread_mutex_t mutex_;
 } sll;
 
 void sll_init(sll* this, size_t dataSize);
@@ -21,8 +20,10 @@ void sll_clear(sll* this);
 void sll_destroy(sll* this);
 size_t sll_get_size(const sll* this);
 _Bool sll_get(sll* this, size_t index, void* out);
+// dangerous, use with care!
+void* sll_get_ref(sll* this, size_t index);
 _Bool sll_add(sll* this, void* data);
-void sll_for_each(sll* this, void(*process_item)(void*));
+void sll_for_each(sll* this, void(*process_item)(void*, void*), void* data);
 
 _Bool sll_set(sll* this, size_t index, void* data);
 _Bool sll_insert(sll* this, size_t index, void* data);
