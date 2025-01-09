@@ -4,8 +4,10 @@
 #include "../libinput/input.h"
 #include "../libstructures/syn_buffer.h"
 #include "graphics/graphics.h"
+#include "graphics/object.h"
 #include "menu/basic_menu.h"
 #include "menu/input_menu.h"
+#include "graphics/objects/circle.h"
 
 void on_select(void* data) {
     menu_hide(data);
@@ -38,7 +40,7 @@ typedef struct mouse_input_event_data {
 
 typedef struct input_context {
     syn_buffer* event_buffer;
-    graphics_context* context;
+    object_context* context;
 } input_context;
 
 void input_on_key(int ch, int key, void* context) {
@@ -62,7 +64,7 @@ void input_on_mouse(int x, int y, int key, void* context) {
 
 void input_on_event(struct tb_event* ev, void* context) {
     if (ev->type == TB_EVENT_RESIZE) {
-        graphics_refresh(((input_context*)context)->context);
+        object_screen_resize(((input_context*)context)->context, ev->x, ev->y);
     }
 }
 
@@ -81,20 +83,33 @@ void menu_call_input(void* data) {
     menu_show(data, in);
 }
 
+void on_circle(object* object, void* context) {
+    remove_object(object->object_context, object->id);
+    //free_object(object);
+}
+
 int main() {
     syn_buffer event_buffer;
     syn_buffer_init(&event_buffer, 16, sizeof(event_message));
 
     graphics_context context;
     graphics_init(&context);
-    input_context i_context = (struct input_context){&event_buffer, &context};
+
+    object_context object_context;
+    object_context_init(&object_context, &context);
+    object_screen_resize(&object_context, get_width(), get_height());
+
+    input_context i_context = (struct input_context){&event_buffer, &object_context};
 
     input_init(&i_context, input_on_key, input_on_mouse, input_on_event);
 
-    shape c1 = OBJECT_CIRCLE(0, COLOR_RED, 10, 10, 3);
-    shape c2 = OBJECT_CIRCLE(2, COLOR_RED | COLOR_BRIGHT, 12, 10, 2)
-    add_object(&context, &c1);
-    add_object(&context, &c2);
+    object circle;
+    object circle2;
+    circle_init(&circle, 0, 10, 10, COLOR_RED, 4, on_circle, NULL);
+    circle_init(&circle2, 1, 12, 10, COLOR_GREEN, 5, on_circle, NULL);
+
+    add_object(&object_context, &circle);
+    add_object(&object_context, &circle2);
 
     _Bool run = 1;
 
@@ -123,23 +138,29 @@ int main() {
                     break;
                 }
                 if (ch == 'm') menu_show(&context, &m);
-                if (ch == 'e') change_object_color(&context, c1.id, COLOR_GREEN);
+                if (ch == 'e') remove_object(&object_context, 0);
 
             }
             pthread_mutex_unlock(&context.menu_mutex);
 
-            graphics_refresh(&context);
+            graphics_refresh(&context, &object_context);
         }
         if (message.type == MOUSE_INPUT_EVENT) {
             mouse_input_event_data* ev_data = message.data;
             int x = ev_data->x, y = ev_data->y, key = ev_data->key;
             free(ev_data);
-            shape s = OBJECT_CIRCLE(shapez++, COLOR_RED, x>>1, y, 2);
-            add_object(&context, &s);
+            if (!objects_click(&object_context, x, y)) {
+                object c;
+                circle_init(&c, shapez++, x>>1, y, COLOR_RED, 3, on_circle, NULL);
+                add_object(&object_context, &c);
+            }
         }
     }
 
     menu_destroy(&m);
+    free_object(&circle);
+    free_object(&circle2);
+    object_context_free(&object_context);
     input_destroy();
     graphics_destroy(&context);
     syn_buffer_free(&event_buffer);

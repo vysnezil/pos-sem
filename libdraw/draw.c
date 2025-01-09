@@ -53,22 +53,22 @@ void draw_line(int x1, int y1, int x2, int y2, int fg_color, int bg_color, int c
 }
 
 void draw_pixel(int x, int y, int color) {
-    tb_set_cell(x*2, y, ' ', TB_CYAN, color);
-    tb_set_cell(x*2+1, y, ' ', TB_CYAN, color);
+    tb_set_cell(x*2, y, ' ', color, color);
+    tb_set_cell(x*2+1, y, ' ', color, color);
 }
 void draw_char(int x, int y, int character, int fg_color, int bg_color) {
     tb_set_cell(x, y, character, fg_color, bg_color);
 }
 
-void draw_circle(int x, int y, int r, int color) {
+void draw_circle(int x, int y, int r, void(*draw)(int x, int y, void*), void* context) {
     int dx = 0;
     int dy = r;
     int p = 1 - r;
 
-    draw_pixel(x, y + r, color);
-    draw_pixel(x, y - r, color);
-    draw_pixel(x + r, y, color);
-    draw_pixel(x - r, y, color);
+    draw(x, y + r, context);
+    draw(x, y - r, context);
+    draw(x + r, y, context);
+    draw(x - r, y, context);
 
     while (dx < dy) {
         dx++;
@@ -80,14 +80,14 @@ void draw_circle(int x, int y, int r, int color) {
             p = p + 2 * (dx - dy) + 1;
         }
 
-        draw_pixel(x + dx, y + dy, color);
-        draw_pixel(x - dx, y + dy, color);
-        draw_pixel(x + dx, y - dy, color);
-        draw_pixel(x - dx, y - dy, color);
-        draw_pixel(x + dy, y + dx, color);
-        draw_pixel(x - dy, y + dx, color);
-        draw_pixel(x + dy, y - dx, color);
-        draw_pixel(x - dy, y - dx, color);
+        draw(x + dx, y + dy, context);
+        draw(x - dx, y + dy, context);
+        draw(x + dx, y - dy, context);
+        draw(x - dx, y - dy, context);
+        draw(x + dy, y + dx, context);
+        draw(x - dy, y + dx, context);
+        draw(x + dy, y - dx, context);
+        draw(x - dy, y - dx, context);
     }
 }
 

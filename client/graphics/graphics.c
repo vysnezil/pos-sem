@@ -1,10 +1,12 @@
 #include "graphics.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "../../libdraw/draw.h"
 #include "../../libshared/termbox2.h"
+#include "../../libstructures/sll.h"
+
+#include "object.h"
 
 #define M_ADD_SHAPE 0
 #define M_DEL_SHAPE 1
@@ -37,63 +39,26 @@ void menu_hide(graphics_context* context) {
     syn_buffer_add(&context->buffer, &m);
 }
 
-void redraw_shape(const shape* shape) {
-    switch (shape->type) {
-        case SHAPE_PIXEL:
-            draw_pixel(shape->x, shape->y, shape->color);
-            break;
-        case SHAPE_CIRCLE:
-            draw_circle(shape->x, shape->y, shape->param1, shape->color);
-            break;
-        case SHAPE_TEXT:
-            draw_circle(shape->x, shape->y, shape->param1, shape->color);
-        break;
-        default:
-            break;
-    }
-}
-
-void draw_shape(void* shape) {
-    redraw_shape(shape);
-}
-
-void m_add_object(graphics_context* context, shape* sh) {
-    sll_add(&context->objects, sh);
-    draw_shape(sh);
-    redraw_screen(context);
-}
-
-void m_remove_object(graphics_context* context, int shape_id) {
-    const size_t size = sll_get_size(&context->objects);
-    for (int i = 0; i < size; i++) {
-        shape out;
-        sll_get(&context->objects, i, &out);
-        if (out.id == shape_id) {
-            sll_remove(&context->objects, i);
-            out.color = COLOR_DEFAULT;
-            redraw_shape(&out);
-        }
-    }
-    sll_for_each(&context->objects, draw_shape);
-    redraw_screen(context);
-}
-
 void* handle_render(void* arg) {
     graphics_context* context = arg;
     while (1) {
         render_message m;
         syn_buffer_get(&context->buffer, &m);
         switch (m.type) {
-            case M_ADD_SHAPE:
-                m_add_object(context, m.data);
-                break;
-            case M_DEL_SHAPE:
-                m_remove_object(context, *(int*)m.data);
-                free(m.data);
-                break;
             case M_REDRAW:
                 tb_clear();
-                sll_for_each(&context->objects, draw_shape);
+                object_context* obj = m.data;
+                if (obj != NULL) {
+                    pthread_mutex_lock(&obj->mutex);
+                    const size_t size = sll_get_size(&obj->objects);
+                    for (int i = 0; i < size; i++) {
+                        object out;
+                        sll_get(&obj->objects, i, &out);
+                        // passing a copy should be fine
+                        out.renderer(obj->graphics, &out);
+                    }
+                    pthread_mutex_unlock(&obj->mutex);
+                }
                 redraw_screen(context);
                 break;
             case M_MENU:
@@ -102,10 +67,9 @@ void* handle_render(void* arg) {
                 if (m.data == NULL) {
                     int w = get_width()>>1, h = get_height();
                     draw_rectangle(0, 0, w, h, COLOR_DEFAULT, 1);
-                    sll_for_each(&context->objects, draw_shape);
                 }
-                redraw_screen(context);
                 pthread_mutex_unlock(&context->menu_mutex);
+                redraw_screen(context);
             break;
             default:
                 break;
@@ -116,7 +80,6 @@ void* handle_render(void* arg) {
 
 void graphics_init(graphics_context* context) {
     syn_buffer_init(&context->buffer, 16, sizeof(render_message));
-    sll_init(&context->objects, sizeof(shape));
     pthread_mutex_init(&context->menu_mutex, NULL);
     context->active_menu = NULL;
     draw_init();
@@ -127,39 +90,14 @@ void graphics_destroy(graphics_context* context) {
     menu_hide(context);
     pthread_cancel(context->render_thread);
     pthread_join(context->render_thread, NULL);
-    sll_destroy(&context->objects);
     syn_buffer_free(&context->buffer);
     pthread_mutex_destroy(&context->menu_mutex);
     draw_destroy();
 }
 
-void add_object(graphics_context* context, shape* sh) {
-    render_message m = (render_message){sh, M_ADD_SHAPE};
-    syn_buffer_add(&context->buffer, &m);
-}
-
-void remove_object(graphics_context* context, int object_id) {
-    int* obj_id = malloc(sizeof(int));
-    *obj_id = object_id;
-    render_message m = (render_message){obj_id, M_DEL_SHAPE};
-    syn_buffer_add(&context->buffer, &m);
-}
-
-void change_object_color(graphics_context* context, int object_id, int color) {
-    for (int i = 0; i < sll_get_size(&context->objects); i++) {
-        shape out;
-        sll_get(&context->objects, i, &out);
-        if (out.id == object_id) {
-            out.color = color;
-            sll_set(&context->objects, i, &out);
-            break;
-        }
-    }
-    graphics_refresh(context);
-}
-
-void graphics_refresh(graphics_context* context) {
-    render_message m = (render_message){NULL, M_REDRAW};
+// objects is object context
+void graphics_refresh(graphics_context* context, void* objects) {
+    render_message m = (render_message){objects, M_REDRAW};
     syn_buffer_add(&context->buffer, &m);
 }
 

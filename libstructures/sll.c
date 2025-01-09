@@ -63,8 +63,8 @@ size_t sll_get_size(const sll* this)
 
 _Bool sll_get(sll* this, size_t index, void* out)
 {
-    if (index >= sll_get_size(this)) return false;
     pthread_mutex_lock(&this->mutex_);
+    if (index >= sll_get_size(this)) return false;
     sll_node* node = get_node(this, index);
     memcpy(out, node->data_, this->dataSize_);
     pthread_mutex_unlock(&this->mutex_);
@@ -73,8 +73,8 @@ _Bool sll_get(sll* this, size_t index, void* out)
 
 _Bool sll_set(sll* this, size_t index, void* data)
 {
-    if (index >= sll_get_size(this)) return false;
     pthread_mutex_lock(&this->mutex_);
+    if (index >= sll_get_size(this)) return false;
     sll_node* node = get_node(this, index);
     memcpy(node->data_, data, this->dataSize_);
     pthread_mutex_unlock(&this->mutex_);
@@ -113,8 +113,11 @@ _Bool sll_insert(sll* this, size_t index, void* data)
 
 _Bool sll_remove(sll* this, size_t index)
 {
-    if (index >= sll_get_size(this)) return false;
     pthread_mutex_lock(&this->mutex_);
+    if (index >= sll_get_size(this)) {
+        pthread_mutex_unlock(&this->mutex_);
+        return false;
+    }
     --this->size_;
     sll_node* node = NULL;
     sll_node* prevNode = NULL;
