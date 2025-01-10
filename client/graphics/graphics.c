@@ -40,8 +40,9 @@ void menu_hide(graphics_context* context) {
     syn_buffer_add(&context->buffer, &m);
 }
 
-void draw_object(object* obj, graphics_context* context) {
-    obj->renderer(obj->object_context->graphics, obj);
+void draw_object(void* obj, void* context) {
+    object* ob = obj;
+    ob->renderer(ob->object_context->graphics, obj);
 }
 
 void* handle_render(void* arg) {
@@ -61,15 +62,15 @@ void* handle_render(void* arg) {
                 redraw_screen(context);
                 break;
             case M_FORCE_DRAW:
-                object* object = m.data;
-                if (object == NULL) break;
-                pthread_mutex_lock(&object->object_context->mutex);
-                object->renderer(object->object_context->graphics, object);
-                pthread_mutex_unlock(&object->object_context->mutex);
+                object* o = m.data;
+                if (o == NULL) break;
+                pthread_mutex_lock(&o->object_context->mutex);
+                o->renderer(o->object_context->graphics, o);
+                pthread_mutex_unlock(&o->object_context->mutex);
                 // if object have default color, it will be freed!
-                if (object->color == COLOR_DEFAULT) {
-                    free_object(object);
-                    free(object);
+                if (o->color == COLOR_DEFAULT) {
+                    free_object(o);
+                    free(o);
                 }
                 redraw_screen(context);
                 break;
@@ -82,7 +83,7 @@ void* handle_render(void* arg) {
                 }
                 pthread_mutex_unlock(&context->menu_mutex);
                 redraw_screen(context);
-            break;
+                break;
             default:
                 break;
         }

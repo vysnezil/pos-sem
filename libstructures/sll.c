@@ -97,19 +97,27 @@ _Bool sll_insert(sll* this, size_t index, void* data) {
 }
 
 _Bool sll_remove(sll* this, size_t index) {
-    if (index >= sll_get_size(this)) return false;
+    if (index >= this->size_) return false;
     --this->size_;
     sll_node* node = NULL;
     sll_node* prevNode = NULL;
-    sll_node** nextPtr = &this->head_;
+    sll_node* nextPtr = this->head_;
     for (size_t i = 0; i < index; i++)
     {
-        prevNode = *nextPtr;
-        nextPtr = &(*nextPtr)->next_;
+        prevNode = nextPtr;
+        nextPtr = nextPtr->next_;
     }
-    if (index == sll_get_size(this) - 1) this->tail_ = prevNode;
-    node = *nextPtr;
-    *nextPtr = (*nextPtr)->next_;
+    node = nextPtr;
+    if (index == this->size_) {
+        this->tail_ = prevNode;
+        if (this->tail_ != NULL) this->tail_->next_ = NULL;
+    }
+    else {
+        nextPtr = node->next_;
+        if (prevNode != NULL) prevNode->next_ = nextPtr;
+        else this->head_ = nextPtr;
+    }
+    if (this->size_ == 0) this->head_ = NULL;
     destroy_node(node);
     return true;
 }

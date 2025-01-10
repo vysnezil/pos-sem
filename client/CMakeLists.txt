@@ -4,6 +4,6 @@ set(CMAKE_C_STANDARD 11)
 add_executable(client main.c graphics/graphics.c menu/menu.c menu/basic_menu.c
         menu/input_menu.c menu/renderer.c graphics/object.c graphics/objects/circle.c)
 
-target_compile_options(client PRIVATE "-g" "-O3" "-std=c11")
+target_compile_options(client PRIVATE "-g" "-std=c11")
 
 target_link_libraries(client PRIVATE libstructures libdraw libinput)

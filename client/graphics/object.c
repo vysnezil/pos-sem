@@ -29,7 +29,10 @@ void remove_object(object_context* context, int object_id) {
 
 _Bool objects_click(object_context* context, int x, int y) {
     pthread_mutex_lock(&context->mutex);
-    if (x < 0 || x >= context->screen_width || y < 0 || y >= context->screen_height) return 1;
+    if (x < 0 || x >= context->screen_width || y < 0 || y >= context->screen_height) {
+        pthread_mutex_unlock(&context->mutex);
+        return 1;
+    }
     char clicked_id = context->screen[y * context->screen_width + x];
     if (clicked_id == (char)0xFF) {
         pthread_mutex_unlock(&context->mutex);
@@ -45,8 +48,8 @@ _Bool objects_click(object_context* context, int x, int y) {
             break;
         }
     }
-    pthread_mutex_unlock(&context->mutex);
     graphics_refresh(context->graphics, context);
+    pthread_mutex_unlock(&context->mutex);
     return 1;
 }
 

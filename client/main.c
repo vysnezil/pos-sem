@@ -86,6 +86,7 @@ void menu_call_input(void* data) {
 void on_circle(object* obj, void* context) {
     pthread_mutex_unlock(&obj->object_context->mutex);
     remove_object(obj->object_context, obj->id);
+    //obj->color = COLOR_WHITE;
 }
 
 int main() {
