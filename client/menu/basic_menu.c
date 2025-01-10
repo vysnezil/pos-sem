@@ -32,10 +32,11 @@ void basic_menu_input(menu* menu, int key, int ch) {
 
 void basic_menu_destroy(menu* m) {
     basic_menu_data* data = m->data;
+    for (int i = 0; i < data->option_count; i++) free(data->options[i]);
     free(data->options);
     data->options = NULL;
     free(data);
-    m->data = NULL;
+    free(m);
 }
 
 void basic_menu_renderer(graphics_context* context, menu* m) {

@@ -36,6 +36,8 @@ void menu_show(graphics_context* context, menu* menu) {
 }
 
 void menu_hide(graphics_context* context) {
+    if (context->active_menu != NULL) menu_destroy(context->active_menu);
+    context->active_menu = NULL;
     render_message m = (render_message){NULL, M_MENU};
     syn_buffer_add(&context->buffer, &m);
 }
@@ -100,7 +102,7 @@ void graphics_init(graphics_context* context) {
 }
 
 void graphics_destroy(graphics_context* context) {
-    menu_hide(context);
+    if (context->active_menu != NULL) context->active_menu->free_func(context->active_menu);
     pthread_cancel(context->render_thread);
     pthread_join(context->render_thread, NULL);
     syn_buffer_free(&context->buffer);

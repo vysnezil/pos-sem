@@ -31,7 +31,8 @@ void input_menu_input(menu* menu, int key, int ch) {
     else {
         switch (key) {
             case TB_KEY_ENTER:
-                if (data->callback != NULL) data->callback(data->selected ? data->buffer : NULL, data->context);
+                if (data->callback != NULL) data->callback(data->selected ? NULL : data->buffer, data->context);
+                //if (data->buffer != NULL) free(data->buffer);
                 break;
             case TB_KEY_BACKSPACE2:
                 if (data->len == 0) break;
@@ -85,6 +86,7 @@ void input_menu_destroy(menu* m) {
     input_menu_data* data = m->data;
     if (data->buffer != NULL) free(data->buffer);
     free(m->data);
+    free(m);
 }
 
 void input_menu_init(char* prompt, menu* menu, void(*callback)(char*, void*), void* context) {

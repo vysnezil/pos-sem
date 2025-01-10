@@ -1,8 +1,6 @@
 #include "input.h"
 #include <pthread.h>
 
-pthread_t input_thread;
-
 typedef struct input_thread_data {
     void (*key_callback)(int,int,void*);
     void (*mouse_callback)(int,int,int,void*);
@@ -36,7 +34,7 @@ void* handle_input(void* arg) {
     return NULL;
 }
 
-void input_init(void* context,
+void input_init(input_context* input, void* context,
     void (*key_callback)(int,int,void*),
     void (*mouse_callback)(int,int,int,void*),
     void (*other_callback)(struct tb_event*, void*)) {
@@ -48,11 +46,11 @@ void input_init(void* context,
     t_data->mouse_callback = mouse_callback;
     t_data->context = context;
     t_data->other_callback = other_callback;
-    pthread_create(&input_thread, NULL, &handle_input, t_data);
+    pthread_create(&input->input_thread, NULL, &handle_input, t_data);
 }
 
-void input_destroy() {
-    pthread_cancel(input_thread);
-    pthread_join(input_thread, NULL);
+void input_destroy(input_context* input) {
+    pthread_cancel(input->input_thread);
+    pthread_join(input->input_thread, NULL);
     tb_shutdown();
 }
