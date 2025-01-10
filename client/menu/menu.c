@@ -1,4 +1,5 @@
 #include "menu.h"
+#include <stddef.h>
 
 void menu_destroy(menu* menu) {
     menu->free_func(menu);

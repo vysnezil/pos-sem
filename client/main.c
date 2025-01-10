@@ -1,13 +1,15 @@
 #include <pthread.h>
 
+#include "../libconnection/connection.h"
+#include "../libconnection/socket/socket_connection.h"
 #include "../libdraw/draw.h"
 #include "../libinput/input.h"
 #include "../libstructures/syn_buffer.h"
 #include "graphics/graphics.h"
 #include "graphics/object.h"
+#include "graphics/objects/circle.h"
 #include "menu/basic_menu.h"
 #include "menu/input_menu.h"
-#include "graphics/objects/circle.h"
 
 void on_select(void* data) {
     menu_hide(data);
@@ -89,9 +91,18 @@ void on_circle(object* obj, void* context) {
     //obj->color = COLOR_WHITE;
 }
 
+void on_network(void* data, size_t size, void* context) {
+    free(data);
+}
+
 int main() {
+    connection con;
+    int res = socket_connect(&con, "127.0.0.1", 28565, on_network, &con);
+
     syn_buffer event_buffer;
     syn_buffer_init(&event_buffer, 16, sizeof(event_message));
+
+
 
     graphics_context context;
     graphics_init(&context);
@@ -140,7 +151,9 @@ int main() {
                 }
                 if (ch == 'm') menu_show(&context, &m);
                 if (ch == 'e') remove_object(&object_context, 0);
-
+                int mes = 33;
+                if (ch == 'p') connection_send(&con, &mes, sizeof(int));
+                if (ch == 'o') connection_close(&con);
             }
             pthread_mutex_unlock(&context.menu_mutex);
 
@@ -158,6 +171,7 @@ int main() {
         }
     }
 
+    connection_close(&con);
     menu_destroy(&m);
     object_context_free(&object_context);
     input_destroy();

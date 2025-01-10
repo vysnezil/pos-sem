@@ -24,6 +24,8 @@ _Bool sll_get(sll* this, size_t index, void* out);
 void* sll_get_ref(sll* this, size_t index);
 _Bool sll_add(sll* this, void* data);
 void sll_for_each(sll* this, void(*process_item)(void*, void*), void* data);
+// dangerous, use with care!
+void* sll_find(sll* this, _Bool(*predicate)(void*, void*), void* context);
 
 _Bool sll_set(sll* this, size_t index, void* data);
 _Bool sll_insert(sll* this, size_t index, void* data);

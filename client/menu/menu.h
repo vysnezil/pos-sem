@@ -1,6 +1,5 @@
 #ifndef MENU_H
 #define MENU_H
-#include <pthread.h>
 
 #define MENU_TYPE_NOT_INIT -1
 

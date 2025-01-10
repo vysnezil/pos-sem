@@ -6,5 +6,7 @@ set(CMAKE_C_STANDARD 11)
 add_subdirectory(libstructures)
 add_subdirectory(libdraw)
 add_subdirectory(libinput)
+add_subdirectory(libconnection)
 
 add_subdirectory(client)
+add_subdirectory(server)

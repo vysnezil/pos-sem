@@ -6,6 +6,16 @@
 #include "../graphics/graphics.h"
 #include "renderer.h"
 
+typedef struct input_menu_data {
+    void(*callback)(char*, void*);
+    void* context;
+    char* buffer;
+    int len;
+    int limit;
+    char* prompt;
+    _Bool selected;
+} input_menu_data;
+
 void input_menu_input(menu* menu, int key, int ch) {
     input_menu_data* data = menu->data;
     if (ch != 0) {

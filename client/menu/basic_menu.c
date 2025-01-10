@@ -4,6 +4,12 @@
 #include "../../libinput/input.h"
 #include "renderer.h"
 
+typedef struct basic_menu_data {
+    int option_count;
+    menu_option** options;
+    atomic_uint selected;
+} basic_menu_data;
+
 void basic_menu_input(menu* menu, int key, int ch) {
     basic_menu_data* data = menu->data;
     switch (key) {

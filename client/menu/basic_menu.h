@@ -12,12 +12,6 @@ typedef struct menu_option {
     void* data;
 } menu_option;
 
-typedef struct basic_menu_data {
-    int option_count;
-    menu_option** options;
-    atomic_uint selected;
-} basic_menu_data;
-
 #define MENU_LABEL(text) (menu_option){text, 0, NULL, NULL};
 
 void basic_menu_init(menu* menu, int option_count, ...);

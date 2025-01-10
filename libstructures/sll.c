@@ -131,3 +131,15 @@ void sll_for_each(sll* this, void(*process_item)(void*, void*), void* data) {
     }
 }
 
+void* sll_find(sll* this, _Bool(*predicate)(void*, void*), void* context) {
+    sll_node* node = this->head_;
+    while (node != NULL)
+    {
+        if (predicate(node->data_, context)) {
+            return node->data_;
+        }
+        node = node->next_;
+    }
+    return NULL;
+}
+
