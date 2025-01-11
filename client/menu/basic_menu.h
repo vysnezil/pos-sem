@@ -4,13 +4,7 @@
 #include <stdatomic.h>
 
 #define MENU_TYPE_BASIC 0
-
-typedef struct menu_option {
-    char* text;
-    _Bool selectable;
-    void (*on_select)(void*);
-    void* data;
-} menu_option;
+#define MENU_TYPE_BASIC 0
 
 #define MENU_LABEL(text) (menu_option){text, 0, NULL, NULL};
 

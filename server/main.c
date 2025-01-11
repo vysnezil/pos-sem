@@ -37,10 +37,6 @@ typedef struct server_recv_data {
 } server_recv_data;
 
 void on_recv(int con_id, void* data, size_t len, void* context) {
-    if (data == NULL && len == 0) {
-        printf("%d disconnect!\n", con_id);
-        return;
-    }
     server_recv_data* recv_data = malloc(sizeof(server_recv_data));
     recv_data->con_id = con_id;
     recv_data->data = data;

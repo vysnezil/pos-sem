@@ -4,7 +4,7 @@
 #include "../libstructures/sll.h"
 
 typedef struct player {
-    char name[30];
+    char name[20];
     int id;
     int score;
 } player;

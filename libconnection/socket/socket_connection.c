@@ -26,7 +26,7 @@ void* handle_receive(void* arg) {
         if (data_recv_len <= 0) break;
         con->on_receive(recv_data, size, con->context);
     }
-    con->on_receive(NULL, SIZE_MAX-id, con->context);
+    con->on_receive(NULL, SIZE_MAX, con->context);
     return NULL;
 }
 

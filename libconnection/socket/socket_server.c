@@ -29,6 +29,16 @@ void* handle_single_connection(void* arg) {
         svc.srv->on_receive(svc.con->id, buffer, size, svc.srv->context);
     }
     svc.srv->on_receive(svc.con->id, NULL, 0, svc.srv->context);
+    pthread_mutex_lock(&svc.srv->mutex);
+    size_t len = sll_get_size(&svc.srv->connections);
+    for (int i = 0; i < len; i++) {
+        connection* out = sll_get_ref(&svc.srv->connections, i);
+        if (out->id == svc.con->id) {
+            sll_remove(&svc.srv->connections, i);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&svc.srv->mutex);
     return NULL;
 }
 

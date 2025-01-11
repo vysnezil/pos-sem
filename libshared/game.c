@@ -13,10 +13,10 @@ void add_player(game* game, player* p) {
 
 void remove_player(game* game, int player_id) {
     pthread_mutex_lock(&(game->mutex));
-    int len = sll_get_size(&game->players);
+    size_t len = sll_get_size(&game->players);
     for (int i = 0; i < len; i++) {
         player* p = sll_get_ref(&game->players, i);
-        if (p->id == player_id) sll_remove(&game->players, i);
+        if (p!= NULL && p->id == player_id) sll_remove(&game->players, i);
     }
     pthread_mutex_unlock(&(game->mutex));
 }

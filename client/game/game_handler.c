@@ -3,7 +3,10 @@
 #include "../../libconnection/connection.h"
 #include "../../libshared/command_types.h"
 #include "../graphics/objects/circle.h"
+#include "../menu/basic_menu.h"
 #include "../menu/input_menu.h"
+#include "../menu/list_menu.h"
+#include "../ui.h"
 
 void on_circle(object* obj, void* context_arg) {
     main_context* context = context_arg;
@@ -22,11 +25,24 @@ void name_callback(char* data, void* arg_context) {
     menu_hide(&context->graphics);
 }
 
+void on_ready(void* arg) {
+    main_context* context = arg;
+    command_ready pd = {COMMAND_PLAYER_READY, 0, 1};
+    connection_send(&context->connection, &pd, sizeof(command_ready));
+}
+
+char* player_tostr(void* obj) {
+    return ((player*)obj)->name;
+}
+
 void handle_command(void* arg, size_t size, main_context* context) {
-    if (arg == NULL) {
+    if (size == SIZE_MAX) {
         // TODO: connection lost!
+        show_main_menu(context);
         return;
     }
+    if (arg == NULL) return;
+    game* g = &context->game;
     command_simple* cmd = arg;
     int type =  cmd->type;
     switch (type) {
@@ -53,16 +69,25 @@ void handle_command(void* arg, size_t size, main_context* context) {
         case COMMAND_PLAYER:
         {
             command_player* data = arg;
-            player p;
-            memcpy(&p.name, data->name, 20);
-            p.id = data->player_id;
-            p.score = 0;
-            add_player(&context->game, &p);
-            // TODO: on first, show lobby
-            menu* in = malloc(sizeof(menu));
-            in->title = " You are connected! ";
-            input_menu_init(data->name, in, name_callback, context);
-            menu_show(&context->graphics, in);
+            if (data->disconnect) {
+                remove_player(g, data->player_id);
+            }
+            else {
+                player p;
+                memcpy(&p.name, data->name, 20);
+                p.id = data->player_id;
+                p.score = 0;
+                if (sll_get_size(&g->players) == 0) {
+                    menu* l = malloc(sizeof(menu));
+                    l->type = MENU_TYPE_NOT_INIT;
+                    l->title = " Lobby ";
+                    // prompt on stack?
+                    list_menu_init(l, "Connected players", &g->players, &g->mutex, player_tostr);
+                    menu_show(&context->graphics, l);
+                }
+                add_player(&context->game, &p);
+            }
+            graphics_refresh(&context->graphics, &context->objects);
         }
         break;
         case COMMAND_SCORE:

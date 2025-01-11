@@ -15,6 +15,13 @@ typedef struct menu {
     char* title;
 } menu;
 
+typedef struct menu_option {
+    char* text;
+    _Bool selectable;
+    void (*on_select)(void*);
+    void* data;
+} menu_option;
+
 #define MENU(name) (menu){.title = name, .type = MENU_TYPE_NOT_INIT};
 
 void menu_destroy(menu* menu);

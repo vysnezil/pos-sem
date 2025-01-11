@@ -28,6 +28,7 @@ typedef struct command_time {
 typedef struct command_player {
     int type;
     int player_id;
+    _Bool disconnect;
     char name[20];
 } command_player;
 

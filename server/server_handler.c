@@ -1,10 +1,24 @@
 #include "server_handler.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../libshared/command_types.h"
 #include "../libshared/game.h"
+
+struct forech_sendplayer_context {
+    server* srv;
+    int con_id;
+};
+
+void forech_sendplayer(void* obj_arg, void* context_arg) {
+    struct forech_sendplayer_context* cnt = context_arg;
+    player* p = obj_arg;
+    command_player com = (command_player){ COMMAND_PLAYER, p->id };
+    memcpy(com.name, p->name, sizeof(p->name));
+    send_data(cnt->srv, cnt->con_id, &com, sizeof(command_player));
+}
 
 void handle_command(int con_id, void* arg, size_t len, server_context* context) {
     server* s = &context->server;
@@ -13,11 +27,14 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
         if (arg != NULL) {
             command_simple com = (command_simple){ COMMAND_INIT };
             send_data(s, con_id, &com, sizeof(command_simple));
+            return;
         }
-        return;
     }
     if (arg == NULL) {
-        // TODO: handle disconnect
+        printf("%d disconneced!\n", con_id);
+        remove_player(g, con_id);
+        command_player p = (command_player){ COMMAND_PLAYER, con_id, 1};
+        broadcast_data(s, &p, sizeof(command_player));
         return;
     }
     command_simple* cmd = arg;
@@ -26,9 +43,13 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
         case COMMAND_PLAYER: {
             command_player* data = arg;
             player p;
-            memcpy(&p.name, data, 30);
+            memcpy(p.name, data->name, 20);
             p.id = con_id;
             p.score = 0;
+            pthread_mutex_lock(&g->mutex);
+            struct forech_sendplayer_context cnt = (struct forech_sendplayer_context) { s, con_id };
+            sll_for_each(&g->players, forech_sendplayer, &cnt);
+            pthread_mutex_unlock(&g->mutex);
             add_player(g, &p);
             data->player_id = con_id;
             broadcast_data(s, arg, sizeof(command_player));

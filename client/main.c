@@ -65,7 +65,6 @@ void input_on_event(struct tb_event* ev, void* context) {
 
 void on_network(void* data, size_t size, void* context) {
     main_context* c = context;
-    if (data == NULL) return;
     network_event_data* n = malloc(sizeof(network_event_data));
     n->data = data;
     n->size = size;

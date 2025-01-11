@@ -1,5 +1,6 @@
 #include "object.h"
 #include <stdlib.h>
+#include <string.h>
 
 void add_object(object_context* context, object* obj) {
     pthread_mutex_lock(&context->mutex);
@@ -84,7 +85,7 @@ void object_screen_resize(object_context* context, int w, int h) {
         char* new_screen = realloc(context->screen, w * h * sizeof(char));
         if (new_screen != NULL) context->screen = new_screen;
     }
-    for (size_t i = 0; i < w * h; i++) context->screen[i] = (char)0xFF;
+    memset(context->screen, (char)0xFF, w * h);
     graphics_refresh(context->graphics, context);
     pthread_mutex_unlock(&context->mutex);
 }
