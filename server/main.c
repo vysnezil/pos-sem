@@ -53,8 +53,8 @@ void* game_loop(void* arg) {
     syn_buffer* buff = arg;
     int circle_id = 0;
     for (;;) {
-        command_circle_data* circle = malloc(sizeof(command_circle_data));
-        *circle = (command_circle_data){
+        command_circle* circle = malloc(sizeof(command_circle));
+        *circle = (command_circle){
             circle_id++, rand()%LIMIT_X, rand()%LIMIT_Y, rand()%LIMIT_R, rand()%8
         };
         server_event event = (server_event) {SERVER_EVENT_CIRCLE, &circle};

@@ -11,39 +11,45 @@
 #define COMMAND_HIT 7
 #define COMMAND_PLAYER_READY 7
 
-typedef struct command {
+typedef struct command_simple {
     int type;
-    void* data;
-} command;
+} command_simple;
 
-typedef struct command_start_data {
+typedef struct command_start {
+    int type;
     int time;
-} command_start_data;
+} command_start;
 
-typedef struct command_time_data {
+typedef struct command_time {
+    int type;
     int time;
-} command_time_data;
+} command_time;
 
-typedef struct command_player_data {
+typedef struct command_player {
+    int type;
     int player_id;
     char name[20];
-} command_player_data;
+} command_player;
 
-typedef struct command_score_data {
+typedef struct command_score {
+    int type;
     int score, player_id;
-} command_score_data;
+} command_score;
 
-typedef struct command_circle_data {
+typedef struct command_circle {
+    int type;
     int id, x, y, r, color;
-} command_circle_data;
+} command_circle;
 
-typedef struct command_hit_data {
+typedef struct command_hit {
+    int type;
     int id;
-} command_hit_data;
+} command_hit;
 
-typedef struct command_ready_data {
+typedef struct command_ready {
+    int type;
     int player_id;
     _Bool ready;
-} command_ready_data;
+} command_ready;
 
 #endif

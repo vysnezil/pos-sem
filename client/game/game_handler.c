@@ -8,20 +8,17 @@
 void on_circle(object* obj, void* context_arg) {
     main_context* context = context_arg;
     obj->color |= COLOR_BRIGHT;
-    command cmd;
+    command_circle cmd;
     cmd.type = COMMAND_HIT;
-    command_hit_data data;
-    data.id = obj->id;
-    connection_send(&context->connection, &cmd, sizeof(command) + sizeof(data));
+    cmd.id = obj->id;
+    connection_send(&context->connection, &cmd, sizeof(command_circle));
 }
 
 void name_callback(char* data, void* arg_context) {
     main_context* context = arg_context;
-    player* p = malloc(sizeof(player));
-    memcpy(&p->name, data, 30);
-    p->id = 0;
-    p->score = 0;
-    connection_send(&context->connection, p, sizeof(player));
+    command_player pd = {COMMAND_PLAYER, 0};
+    memcpy(&pd.name, data, 20);
+    connection_send(&context->connection, &pd, sizeof(command_player));
     menu_hide(&context->graphics);
 }
 
@@ -30,7 +27,7 @@ void handle_command(void* arg, size_t size, main_context* context) {
         // TODO: connection lost!
         return;
     }
-    command* cmd = arg;
+    command_simple* cmd = arg;
     int type =  cmd->type;
     switch (type) {
         case COMMAND_INIT:
@@ -43,21 +40,21 @@ void handle_command(void* arg, size_t size, main_context* context) {
         case COMMAND_START:
             {
                 menu_hide(&context->graphics);
-                command_start_data* data = cmd->data;
+                command_start* data = arg;
                 game_start(&context->game, data->time);
             }
             break;
         case COMMAND_TIME:
             {
-                command_time_data* data = cmd->data;
+                command_time* data = arg;
                 game_update_time(&context->game, data->time);
             }
             break;
         case COMMAND_PLAYER:
         {
-            command_player_data* data = cmd->data;
+            command_player* data = arg;
             player p;
-            memcpy(&p.name, data->name, 30);
+            memcpy(&p.name, data->name, 20);
             p.id = data->player_id;
             p.score = 0;
             add_player(&context->game, &p);
@@ -70,13 +67,13 @@ void handle_command(void* arg, size_t size, main_context* context) {
         break;
         case COMMAND_SCORE:
         {
-            command_score_data* data = cmd->data;
+            command_score* data = arg;
             game_update_score(&context->game, data->player_id, data->score);
         }
         break;
         case COMMAND_CIRCLE:
         {
-            command_circle_data* data = cmd->data;
+            command_circle* data = arg;
             object* c = malloc(sizeof(object));
             circle_init(c, data->id, data->x, data->y, data->color, data->r, on_circle, context);
             add_object(&context->objects, c);
@@ -90,7 +87,7 @@ void handle_command(void* arg, size_t size, main_context* context) {
         break;
         case COMMAND_HIT:
         {
-            command_hit_data* data = cmd->data;
+            command_hit* data = arg;
             remove_object(&context->objects, data->id);
         }
         break;
