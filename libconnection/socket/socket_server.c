@@ -20,6 +20,7 @@ void* handle_single_connection(void* arg) {
     server_connection svc = *(server_connection*)arg;
     //free(arg);
     socket_connection_data* con_data = svc.con->connection_data;
+    svc.srv->on_receive(svc.con->id, &svc.con->id, 0, svc.srv->context);
     while (1) {
         size_t size;
         if (recv(con_data->socket, &size, sizeof(size_t), 0) <= 0) break;

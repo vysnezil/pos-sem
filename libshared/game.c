@@ -1,7 +1,7 @@
 #include "game.h"
 
 void game_init(game* game) {
-    pthread_mutex_init(&(game->mutex), NULL);
+    pthread_mutex_init(&game->mutex, NULL);
     sll_init(&game->players, sizeof(player));
 }
 

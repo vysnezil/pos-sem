@@ -12,6 +12,24 @@ void send_data(server* server, int connection_id, void* data, size_t size) {
     pthread_mutex_unlock(&server->mutex);
 }
 
+typedef struct data_len {
+    size_t len;
+    void* data;
+} data_len;
+
+void foreach_send_data(void* arg_con, void* arg_data) {
+    connection* con = arg_con;
+    data_len* dlen = arg_data;
+    con->send(con, dlen->data, dlen->len);
+}
+
+void broadcast_data(server* server, void* data, size_t size) {
+    pthread_mutex_lock(&server->mutex);
+    data_len dlen = (data_len){size, data};
+    sll_for_each(&server->connections, foreach_send_data, &dlen);
+    pthread_mutex_unlock(&server->mutex);
+}
+
 void server_close_connection(server* server, int connection_id) {
     pthread_mutex_lock(&server->mutex);
     connection* con = sll_find(&server->connections, id_predicate, &connection_id);

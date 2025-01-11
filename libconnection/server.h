@@ -15,6 +15,7 @@ typedef struct server {
 } server;
 
 void send_data(server* server, int connection_id, void* data, size_t size);
+void broadcast_data(server* server, void* data, size_t size);
 void server_close_connection(server* server, int connection_id);
 void server_destroy(server* server);
 

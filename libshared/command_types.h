@@ -9,6 +9,7 @@
 #define COMMAND_END 5
 #define COMMAND_CIRCLE 6
 #define COMMAND_HIT 7
+#define COMMAND_PLAYER_READY 7
 
 typedef struct command {
     int type;
@@ -39,5 +40,10 @@ typedef struct command_circle_data {
 typedef struct command_hit_data {
     int id;
 } command_hit_data;
+
+typedef struct command_ready_data {
+    int player_id;
+    _Bool ready;
+} command_ready_data;
 
 #endif

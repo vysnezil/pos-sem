@@ -22,7 +22,7 @@ void syn_buffer_add(syn_buffer* this, void* data) {
     this->size++;
     this->in %= this->capacity;
     pthread_mutex_unlock(&this->mutex);
-    pthread_cond_signal(&this->consume);
+    pthread_cond_broadcast(&this->consume);
 }
 
 void syn_buffer_get(syn_buffer* this, void* data) {
@@ -33,7 +33,7 @@ void syn_buffer_get(syn_buffer* this, void* data) {
     this->size--;
     this->out %= this->capacity;
     pthread_mutex_unlock(&this->mutex);
-    pthread_cond_signal(&this->produce);
+    pthread_cond_broadcast(&this->produce);
 }
 
 void syn_buffer_free(syn_buffer* this) {

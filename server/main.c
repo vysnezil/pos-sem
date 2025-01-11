@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#define __USE_POSIX199309
+#include <time.h>
 #include <signal.h>
 
 #include "server_handler.h"
@@ -11,6 +13,8 @@
 #include "../libstructures/syn_buffer.h"
 #include "../libshared/game.h"
 #include "../libshared/command_types.h"
+
+#include "server.h"
 
 #define LIMIT_X 50
 #define LIMIT_Y 30
@@ -33,7 +37,7 @@ typedef struct server_recv_data {
 } server_recv_data;
 
 void on_recv(int con_id, void* data, size_t len, void* context) {
-    if (len == 0) {
+    if (data == NULL && len == 0) {
         printf("%d disconnect!\n", con_id);
         return;
     }
@@ -41,7 +45,7 @@ void on_recv(int con_id, void* data, size_t len, void* context) {
     recv_data->con_id = con_id;
     recv_data->data = data;
     recv_data->len = len;
-    server_event event = (server_event) {SERVER_EVENT_RECV, data};
+    server_event event = (server_event) {SERVER_EVENT_RECV, recv_data};
     syn_buffer_add(context, &event);
 }
 
@@ -55,7 +59,7 @@ void* game_loop(void* arg) {
         };
         server_event event = (server_event) {SERVER_EVENT_CIRCLE, &circle};
         syn_buffer_add(buff, &event);
-        usleep(rand()%CIRCLE_MICROS);
+        nanosleep((const struct timespec[]){{0, (rand()%CIRCLE_MICROS)*1000}}, NULL);
     }
     return NULL;
 }
@@ -71,20 +75,19 @@ void* timer_tick(void* arg) {
 }
 
 int main(int argc, char** argv) {
-    server s;
+    server_context context;
     syn_buffer event_buffer;
 
     _Bool running = 0;
 
     // TODO: handle sigint
 
-    int res = socket_server_start(&s, 28565, on_recv, &event_buffer);
+    int res = socket_server_start(&context.server, 28565, on_recv, &event_buffer);
     if (res > 0) {
         fprintf(stderr, "%s\n", strerror(errno));
     }
 
-    game game;
-    game_init(&game);
+    game_init(&context.game);
     pthread_t game_thread;
 
     syn_buffer_init(&event_buffer, 16, sizeof(server_event));
@@ -93,16 +96,17 @@ int main(int argc, char** argv) {
         syn_buffer_get(&event_buffer, &message);
         if (message.type == SERVER_EVENT_RECV) {
             server_recv_data* recv_data = message.data;
-            handle_command(recv_data->con_id, recv_data->data, recv_data->len, &event_buffer);
+            handle_command(recv_data->con_id, recv_data->data, recv_data->len, &context);
+            // TODO: when everyone ready
         }
         if (message.type == SERVER_EVENT_CIRCLE) {
 
         }
         if (message.type == SERVER_TIMER_TICK) {
-            if (!--game.time) {
+            if (!--context.game.time) {
                 //game ended!!
             }
         }
     }
-    game_free(&game);
+    game_free(&context.game);
 }

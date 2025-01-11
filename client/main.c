@@ -64,30 +64,31 @@ void input_on_event(struct tb_event* ev, void* context) {
 }
 
 void on_network(void* data, size_t size, void* context) {
-    network_event_data* network_data = malloc(sizeof(network_event_data));
-    network_data->data = data;
-    network_data->size = size;
-    event_message m = (event_message) {network_data, CONNECTION_EVENT};
-    syn_buffer_add(context, &m);
+    main_context* c = context;
+    if (data == NULL) return;
+    network_event_data* n = malloc(sizeof(network_event_data));
+    n->data = data;
+    n->size = size;
+    event_message m = (event_message) {n, CONNECTION_EVENT};
+    syn_buffer_add(&c->event_buffer, &m);
 }
 
 int main() {
     main_context context;
     context.on_receive = on_network;
     context.running = 1;
-    syn_buffer event_buffer;
-    syn_buffer_init(&event_buffer, 16, sizeof(event_message));
+    syn_buffer_init(&context.event_buffer, 16, sizeof(event_message));
 
     graphics_init(&context.graphics);
     object_context_init(&context.objects, &context.graphics);
     object_screen_resize(&context.objects, get_width(), get_height());
-    input_init(&context.input, &event_buffer, input_on_key, input_on_mouse, input_on_event);
+    input_init(&context.input, &context.event_buffer, input_on_key, input_on_mouse, input_on_event);
 
     show_main_menu(&context);
 
     while (context.running) {
         event_message message;
-        syn_buffer_get(&event_buffer, &message);
+        syn_buffer_get(&context.event_buffer, &message);
         if (message.type == KEY_INPUT_EVENT) {
             key_input_event_data* ev_data = message.data;
             int key = ev_data->key, ch = ev_data->ch;
@@ -120,6 +121,6 @@ int main() {
     object_context_free(&context.objects);
     input_destroy(&context.input);
     graphics_destroy(&context.graphics);
-    syn_buffer_free(&event_buffer);
+    syn_buffer_free(&context.event_buffer);
     return 0;
 }

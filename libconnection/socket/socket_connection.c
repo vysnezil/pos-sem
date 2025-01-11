@@ -1,21 +1,21 @@
 #include "socket_connection.h"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "socket_server.h"
 
 void* handle_receive(void* arg) {
     connection* con = arg;
     socket_connection_data* data = con->connection_data;
     int id;
-    size_t id_recv_len = recv(data->socket, &id, sizeof(size_t), 0);
+    size_t id_recv_len = recv(data->socket, &id, sizeof(int), 0);
     if (id_recv_len <= 0) {
-        con->on_receive(NULL, 0, con->context);
+        con->on_receive(NULL, SIZE_MAX, con->context);
         return NULL;
     }
     con->id = id;
+    con->on_receive(NULL, id, con->context);
 
     while (1) {
         size_t size;
@@ -26,7 +26,7 @@ void* handle_receive(void* arg) {
         if (data_recv_len <= 0) break;
         con->on_receive(recv_data, size, con->context);
     }
-    con->on_receive(NULL, 0, con->context);
+    con->on_receive(NULL, SIZE_MAX-id, con->context);
     return NULL;
 }
 
