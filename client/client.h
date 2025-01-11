@@ -6,6 +6,7 @@
 #include "../libinput/input.h"
 #include "graphics/graphics.h"
 #include "graphics/object.h"
+#include "../libshared/game.h"
 
 typedef struct main_context {
     graphics_context graphics;
@@ -13,6 +14,7 @@ typedef struct main_context {
     input_context input;
     connection connection;
     atomic_bool running;
+    game* game;
 
     void(*on_receive)(void*, size_t, void*);
 } main_context;

@@ -6,6 +6,8 @@
 #include "graphics/object.h"
 #include "menu/basic_menu.h"
 
+#include "game/game_handler.h"
+
 #include "client.h"
 #include "ui.h"
 
@@ -107,6 +109,11 @@ int main() {
             if (!objects_click(&context.objects, x, y)) {
 
             }
+        }
+        if (message.type == CONNECTION_EVENT) {
+            network_event_data* ev_data = message.data;
+            handle_command(ev_data->data, ev_data->size, &context);
+            free(ev_data);
         }
     }
 
