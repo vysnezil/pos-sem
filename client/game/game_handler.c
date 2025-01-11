@@ -48,6 +48,30 @@ char* player_tostr(void* obj) {
     return ((player*)obj)->name;
 }
 
+char* playerscore_tostr(void* obj) {
+    player* p = obj;
+    char* buffer = malloc(40 * sizeof(char));
+    sprintf(buffer, "%s - %d", p->name, p->score);
+    return buffer;
+}
+
+void show_lobby(void* arg) {
+    main_context* context = arg;
+    menu* l = malloc(sizeof(menu));
+    l->type = MENU_TYPE_NOT_INIT;
+    l->title = " Lobby ";
+    list_menu_init(l, "Connected players", &context->game.players, &context->game.mutex, player_tostr);
+    menu_option* op1 = malloc(sizeof(menu_option));
+    menu_option* op2 = malloc(sizeof(menu_option));
+    struct on_ready_data* ready_d = malloc(sizeof(struct on_ready_data));
+    ready_d->context = context;
+    ready_d->option = op1;
+    *op1 = (menu_option) {" ready ", 1, on_ready, ready_d};
+    *op2 = (menu_option) {" leave ", 1, on_leave, context};
+    list_init_options(l, 2, op1, op2);
+    menu_show(&context->graphics, l);
+}
+
 void handle_command(void* arg, size_t size, main_context* context) {
     if (size == SIZE_MAX) {
         // TODO: connection lost!
@@ -68,6 +92,7 @@ void handle_command(void* arg, size_t size, main_context* context) {
             break;
         case COMMAND_START:
             {
+                game_clear(g);
                 menu_hide(&context->graphics);
                 command_start* data = arg;
                 game_start(&context->game, data->time);
@@ -91,19 +116,7 @@ void handle_command(void* arg, size_t size, main_context* context) {
                 p.id = data->player_id;
                 p.score = 0;
                 if (sll_get_size(&g->players) == 0) {
-                    menu* l = malloc(sizeof(menu));
-                    l->type = MENU_TYPE_NOT_INIT;
-                    l->title = " Lobby ";
-                    list_menu_init(l, "Connected players", &g->players, &g->mutex, player_tostr);
-                    menu_option* op1 = malloc(sizeof(menu_option));
-                    menu_option* op2 = malloc(sizeof(menu_option));
-                    struct on_ready_data* ready_d = malloc(sizeof(struct on_ready_data));
-                    ready_d->context = context;
-                    ready_d->option = op1;
-                    *op1 = (menu_option) {" ready ", 1, on_ready, ready_d};
-                    *op2 = (menu_option) {" leave ", 1, on_leave, context};
-                    list_init_options(l, 2, op1, op2);
-                    menu_show(&context->graphics, l);
+                    show_lobby(context);
                 }
                 add_player(&context->game, &p);
             }
@@ -127,11 +140,15 @@ void handle_command(void* arg, size_t size, main_context* context) {
         case COMMAND_END:
         {
             game_stop(&context->game);
-            // TODO: show leaderboard
-            menu* m = malloc(sizeof(menu));
-            m->title = " GAME ENDED!!! ";
-            input_menu_init("finally", m, NULL, NULL);
-            menu_show(&context->graphics, m);
+            objects_clear(&context->objects);
+            menu* l = malloc(sizeof(menu));
+            l->type = MENU_TYPE_NOT_INIT;
+            l->title = " Results ";
+            list_menu_init(l, "Player scores:", &g->players, &g->mutex, playerscore_tostr);
+            menu_option* op1 = malloc(sizeof(menu_option));
+            *op1 = (menu_option) {"  OK  ", 1, show_lobby, context};
+            list_init_options(l, 1, op1);
+            menu_show(&context->graphics, l);
         }
         break;
         case COMMAND_HIT:

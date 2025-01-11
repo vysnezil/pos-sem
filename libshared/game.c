@@ -1,5 +1,9 @@
 #include "game.h"
 
+_Bool p_id_predicate(void* item, void* data) {
+    return ((player*)item)->id == *(int*)data;
+}
+
 void game_init(game* game) {
     pthread_mutex_init(&game->mutex, NULL);
     sll_init(&game->players, sizeof(player));
@@ -30,7 +34,7 @@ void game_update_time(game* game, size_t new_time) {
 
 void game_update_score(game* game, int player_id, int new_score) {
     pthread_mutex_lock(&(game->mutex));
-    player* p = sll_get_ref(&game->players, player_id);
+    player* p = sll_find(&game->players, p_id_predicate, &player_id);
     if (p != NULL) p->score = new_score;
     pthread_mutex_unlock(&(game->mutex));
 }
@@ -51,4 +55,17 @@ void game_stop(game* game) {
 void game_free(game* game) {
     pthread_mutex_destroy(&(game->mutex));
     sll_destroy(&game->players);
+}
+
+void score_clear(void* arg_p, void* context) {
+    ((player*) arg_p)->score = 0;
+}
+
+void game_clear(game* game) {
+    pthread_mutex_lock(&(game->mutex));
+    game->started = 0;
+    game->ready_count = 0;
+    game->time = 0;
+    sll_for_each(&game->players, score_clear, NULL);
+    pthread_mutex_unlock(&(game->mutex));
 }

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../libshared/command_types.h"
@@ -18,6 +19,10 @@ void forech_sendplayer(void* obj_arg, void* context_arg) {
     command_player com = (command_player){ COMMAND_PLAYER, p->id };
     memcpy(com.name, p->name, sizeof(p->name));
     send_data(cnt->srv, cnt->con_id, &com, sizeof(command_player));
+}
+
+_Bool id_predicate(void* item, void* data) {
+    return ((player*)item)->id == *(int*)data;
 }
 
 void handle_command(int con_id, void* arg, size_t len, server_context* context) {
@@ -65,10 +70,13 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
         }
         case COMMAND_HIT: {
             command_hit* cmd = arg;
-            //pthread_mutex_lock(&g->mutex);
-            //todo: score,
-            //pthread_mutex_unlock(&g->mutex);
+            pthread_mutex_lock(&g->mutex);
+            player* p = sll_find(&g->players, id_predicate, &con_id);
+            p->score++;
+            pthread_mutex_unlock(&g->mutex);
             broadcast_data(s, arg, sizeof(command_hit));
+            command_score cmd_s = (command_score) { COMMAND_SCORE, p->score, con_id };
+            broadcast_data(s, &cmd_s, sizeof(command_score));
             break;
         }
     }

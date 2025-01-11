@@ -1,13 +1,13 @@
 #include "server.h"
 #include "connection.h"
 
-_Bool id_predicate(void* item, void* data) {
+_Bool con_id_predicate(void* item, void* data) {
     return ((connection*)item)->id == *(int*)data;
 }
 
 void send_data(server* server, int connection_id, void* data, size_t size) {
     pthread_mutex_lock(&server->mutex);
-    connection* con = sll_find(&server->connections, id_predicate, &connection_id);
+    connection* con = sll_find(&server->connections, con_id_predicate, &connection_id);
     if (con != NULL) con->send(con, data, size);
     pthread_mutex_unlock(&server->mutex);
 }
@@ -32,7 +32,7 @@ void broadcast_data(server* server, void* data, size_t size) {
 
 void server_close_connection(server* server, int connection_id) {
     pthread_mutex_lock(&server->mutex);
-    connection* con = sll_find(&server->connections, id_predicate, &connection_id);
+    connection* con = sll_find(&server->connections, con_id_predicate, &connection_id);
     if (con != NULL) {
         con->close(con);
         // n*n slow find, should be good enough

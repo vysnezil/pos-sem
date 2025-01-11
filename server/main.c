@@ -16,8 +16,8 @@
 
 #include "server.h"
 
-#define LIMIT_X 50
-#define LIMIT_Y 30
+#define LIMIT_X 60
+#define LIMIT_Y 25
 #define LIMIT_R 6
 #define CIRCLE_MICROS 1600000
 
@@ -52,7 +52,7 @@ void* game_loop(void* arg) {
     for (;;) {
         command_circle* circle = malloc(sizeof(command_circle));
         *circle = (command_circle){
-            COMMAND_CIRCLE, circle_id++, rand()%LIMIT_X, rand()%LIMIT_Y, rand()%LIMIT_R, rand()%8
+            COMMAND_CIRCLE, circle_id++, rand()%LIMIT_X, rand()%LIMIT_Y, rand()%LIMIT_R, (rand()%8)+1
         };
         server_event event = (server_event) {SERVER_EVENT_CIRCLE, circle};
         syn_buffer_add(buff, &event);
@@ -118,8 +118,7 @@ int main(int argc, char** argv) {
                 pthread_cancel(timer_thread);
                 pthread_join(game_thread, NULL);
                 pthread_join(timer_thread, NULL);
-                context.game.started = 0;
-                context.game.ready_count = 0;
+                game_clear(&context.game);
                 command_simple c = (command_simple){ COMMAND_END };
                 broadcast_data(&context.server, &c, sizeof(command_simple));
             }

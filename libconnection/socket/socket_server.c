@@ -87,6 +87,7 @@ int socket_server_start(server* this, int port, void(*on_receive)(int, void*, si
     this->free_func = socket_server_free;
     this->context = context;
     this->on_receive = on_receive;
+    this->last_id = 0;
     pthread_mutex_init(&this->mutex, NULL);
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);

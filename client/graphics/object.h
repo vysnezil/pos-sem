@@ -26,6 +26,7 @@ void object_context_init(object_context* context, graphics_context* graphics);
 void object_context_free(object_context* context);
 void add_object(object_context* context, object* obj);
 void remove_object(object_context* context, int object_id);
+void objects_clear(object_context* context);
 _Bool objects_click(object_context* context, int x, int y);
 void object_screen_resize(object_context* context, int w, int h);
 void free_object(object* obj);

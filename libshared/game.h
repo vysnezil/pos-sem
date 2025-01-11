@@ -23,6 +23,7 @@ void remove_player(game* game, int player_id);
 void game_start(game* game, int time);
 void game_stop(game* game);
 void game_free(game* game);
+void game_clear(game* game);
 void game_update_time(game* game, size_t new_time);
 void game_update_score(game* game, int player_id, int new_score);
 

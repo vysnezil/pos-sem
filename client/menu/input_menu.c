@@ -38,6 +38,7 @@ void input_menu_input(menu* menu, int key, int ch) {
                 if (data->len == 0) break;
                 data->buffer[data->len--] = 0;
                 data->buffer[data->len] = 0;
+                break;
             case TB_KEY_ARROW_UP:
             case TB_KEY_ARROW_DOWN:
             case TB_KEY_ARROW_LEFT:
