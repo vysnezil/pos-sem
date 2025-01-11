@@ -9,7 +9,7 @@
 #define COMMAND_END 5
 #define COMMAND_CIRCLE 6
 #define COMMAND_HIT 7
-#define COMMAND_PLAYER_READY 7
+#define COMMAND_PLAYER_READY 8
 
 typedef struct command_simple {
     int type;
@@ -17,12 +17,12 @@ typedef struct command_simple {
 
 typedef struct command_start {
     int type;
-    int time;
+    size_t time;
 } command_start;
 
 typedef struct command_time {
     int type;
-    int time;
+    size_t time;
 } command_time;
 
 typedef struct command_player {

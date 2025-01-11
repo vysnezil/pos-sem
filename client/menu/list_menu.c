@@ -75,6 +75,15 @@ void list_menu_renderer(graphics_context* context, menu* m) {
     con.h = &h;
     sll_for_each(data->list, entry_foreach, &con);
     pthread_mutex_unlock(data->list_mut);
+
+    for (int i = 0; i < data->option_count; i++) {
+        menu_option* option = data->options[i];
+        int l = (int)strlen(option->text);
+        int bg_color = MENU_BG;
+        if (option->selectable) bg_color = i == data->selected ? bg_color | COLOR_REVERSE : bg_color + 2;
+        draw_text(w - (l>>2), (h + LIST_MENU_HEIGHT - 1 - data->option_count) + i, option->text,
+            COLOR_RED, bg_color, l % 2 == 0);
+    }
 }
 
 void list_menu_init(menu* menu, char* title, sll* list, pthread_mutex_t* mut, char*(*fun)(void* obj)) {

@@ -96,7 +96,7 @@ int main() {
             pthread_mutex_lock(&context.graphics.menu_mutex);
             if (context.graphics.active_menu != NULL) menu_input_key(context.graphics.active_menu, key, ch);
             else {
-                //if (ch == 'm') menu_show(&context.graphics, &m);
+                if (ch == 'q') context.running = 0;
             }
 
             pthread_mutex_unlock(&context.graphics.menu_mutex);
@@ -106,9 +106,7 @@ int main() {
             mouse_input_event_data* ev_data = message.data;
             int x = ev_data->x, y = ev_data->y, key = ev_data->key;
             free(ev_data);
-            if (!objects_click(&context.objects, x, y)) {
-
-            }
+            if (!objects_click(&context.objects, x, y)) {}
         }
         if (message.type == CONNECTION_EVENT) {
             network_event_data* ev_data = message.data;
@@ -117,6 +115,7 @@ int main() {
         }
     }
 
+    if (context.connection.id != -1) connection_close(&context.connection);
     object_context_free(&context.objects);
     input_destroy(&context.input);
     graphics_destroy(&context.graphics);

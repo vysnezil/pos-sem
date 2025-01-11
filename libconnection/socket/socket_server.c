@@ -21,19 +21,20 @@ void* handle_single_connection(void* arg) {
     //free(arg);
     socket_connection_data* con_data = svc.con->connection_data;
     svc.srv->on_receive(svc.con->id, &svc.con->id, 0, svc.srv->context);
+    int con_id = svc.con->id;
     while (1) {
         size_t size;
         if (recv(con_data->socket, &size, sizeof(size_t), 0) <= 0) break;
         void* buffer = malloc(size);
         if (recv(con_data->socket, buffer, size, 0) <= 0) break;
-        svc.srv->on_receive(svc.con->id, buffer, size, svc.srv->context);
+        svc.srv->on_receive(con_id, buffer, size, svc.srv->context);
     }
-    svc.srv->on_receive(svc.con->id, NULL, 0, svc.srv->context);
+    svc.srv->on_receive(con_id, NULL, 0, svc.srv->context);
     pthread_mutex_lock(&svc.srv->mutex);
     size_t len = sll_get_size(&svc.srv->connections);
     for (int i = 0; i < len; i++) {
         connection* out = sll_get_ref(&svc.srv->connections, i);
-        if (out->id == svc.con->id) {
+        if (out->id == con_id) {
             sll_remove(&svc.srv->connections, i);
             break;
         }

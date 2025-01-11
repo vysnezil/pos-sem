@@ -3,6 +3,7 @@
 void game_init(game* game) {
     pthread_mutex_init(&game->mutex, NULL);
     sll_init(&game->players, sizeof(player));
+    game->ready_count = 0;
 }
 
 void add_player(game* game, player* p) {

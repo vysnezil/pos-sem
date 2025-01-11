@@ -55,5 +55,21 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
             broadcast_data(s, arg, sizeof(command_player));
             break;
         }
+        case COMMAND_PLAYER_READY: {
+            command_ready* cmd = arg;
+            pthread_mutex_lock(&g->mutex);
+            if (cmd->ready) g->ready_count++;
+            else g->ready_count--;
+            pthread_mutex_unlock(&g->mutex);
+            break;
+        }
+        case COMMAND_HIT: {
+            command_hit* cmd = arg;
+            //pthread_mutex_lock(&g->mutex);
+            //todo: score,
+            //pthread_mutex_unlock(&g->mutex);
+            broadcast_data(s, arg, sizeof(command_hit));
+            break;
+        }
     }
 }

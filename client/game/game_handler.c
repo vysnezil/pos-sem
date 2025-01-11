@@ -11,10 +11,8 @@
 void on_circle(object* obj, void* context_arg) {
     main_context* context = context_arg;
     obj->color |= COLOR_BRIGHT;
-    command_circle cmd;
-    cmd.type = COMMAND_HIT;
-    cmd.id = obj->id;
-    connection_send(&context->connection, &cmd, sizeof(command_circle));
+    command_hit cmd = (command_hit){ COMMAND_HIT, obj->id };
+    connection_send(&context->connection, &cmd, sizeof(command_hit));
 }
 
 void name_callback(char* data, void* arg_context) {
@@ -25,10 +23,25 @@ void name_callback(char* data, void* arg_context) {
     menu_hide(&context->graphics);
 }
 
+struct on_ready_data {
+    main_context* context;
+    menu_option* option;
+    _Bool ready;
+};
+
 void on_ready(void* arg) {
-    main_context* context = arg;
-    command_ready pd = {COMMAND_PLAYER_READY, 0, 1};
+    struct on_ready_data* data = arg;
+    main_context* context = data->context;
+    data->ready = !data->ready;
+    command_ready pd = {COMMAND_PLAYER_READY, 0, data->ready};
     connection_send(&context->connection, &pd, sizeof(command_ready));
+    data->option->text = (data->ready) ? "<READY>" : " ready ";
+}
+
+void on_leave(void* arg) {
+    main_context* context = arg;
+    connection_close(&context->connection);
+    show_main_menu(context);
 }
 
 char* player_tostr(void* obj) {
@@ -81,8 +94,15 @@ void handle_command(void* arg, size_t size, main_context* context) {
                     menu* l = malloc(sizeof(menu));
                     l->type = MENU_TYPE_NOT_INIT;
                     l->title = " Lobby ";
-                    // prompt on stack?
                     list_menu_init(l, "Connected players", &g->players, &g->mutex, player_tostr);
+                    menu_option* op1 = malloc(sizeof(menu_option));
+                    menu_option* op2 = malloc(sizeof(menu_option));
+                    struct on_ready_data* ready_d = malloc(sizeof(struct on_ready_data));
+                    ready_d->context = context;
+                    ready_d->option = op1;
+                    *op1 = (menu_option) {" ready ", 1, on_ready, ready_d};
+                    *op2 = (menu_option) {" leave ", 1, on_leave, context};
+                    list_init_options(l, 2, op1, op2);
                     menu_show(&context->graphics, l);
                 }
                 add_player(&context->game, &p);
@@ -108,6 +128,10 @@ void handle_command(void* arg, size_t size, main_context* context) {
         {
             game_stop(&context->game);
             // TODO: show leaderboard
+            menu* m = malloc(sizeof(menu));
+            m->title = " GAME ENDED!!! ";
+            input_menu_init("finally", m, NULL, NULL);
+            menu_show(&context->graphics, m);
         }
         break;
         case COMMAND_HIT:

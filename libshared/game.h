@@ -14,6 +14,7 @@ typedef struct game {
     sll players;
     _Bool started;
     pthread_mutex_t mutex;
+    int ready_count;
 } game;
 
 void game_init(game* game);

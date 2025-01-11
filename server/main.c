@@ -29,6 +29,7 @@ typedef struct server_event {
 #define SERVER_EVENT_RECV 0
 #define SERVER_EVENT_CIRCLE 1
 #define SERVER_TIMER_TICK 3
+#define SERVER_TIME_SEC 10
 
 typedef struct server_recv_data {
     int con_id;
@@ -51,9 +52,9 @@ void* game_loop(void* arg) {
     for (;;) {
         command_circle* circle = malloc(sizeof(command_circle));
         *circle = (command_circle){
-            circle_id++, rand()%LIMIT_X, rand()%LIMIT_Y, rand()%LIMIT_R, rand()%8
+            COMMAND_CIRCLE, circle_id++, rand()%LIMIT_X, rand()%LIMIT_Y, rand()%LIMIT_R, rand()%8
         };
-        server_event event = (server_event) {SERVER_EVENT_CIRCLE, &circle};
+        server_event event = (server_event) {SERVER_EVENT_CIRCLE, circle};
         syn_buffer_add(buff, &event);
         nanosleep((const struct timespec[]){{0, (rand()%CIRCLE_MICROS)*1000}}, NULL);
     }
@@ -85,6 +86,7 @@ int main(int argc, char** argv) {
 
     game_init(&context.game);
     pthread_t game_thread;
+    pthread_t timer_thread;
 
     syn_buffer_init(&event_buffer, 16, sizeof(server_event));
     while (!running) {
@@ -93,14 +95,33 @@ int main(int argc, char** argv) {
         if (message.type == SERVER_EVENT_RECV) {
             server_recv_data* recv_data = message.data;
             handle_command(recv_data->con_id, recv_data->data, recv_data->len, &context);
-            // TODO: when everyone ready
+            if (!context.game.started && context.game.ready_count > 0 &&
+                context.game.ready_count == sll_get_size(&context.game.players)) {
+                context.game.time = SERVER_TIME_SEC;
+                context.game.started = 1;
+                pthread_create(&game_thread, NULL, game_loop, &event_buffer);
+                pthread_create(&timer_thread, NULL, timer_tick, &event_buffer);
+                command_start p = (command_start){ COMMAND_START, context.game.time};
+                broadcast_data(&context.server, &p, sizeof(command_player));
+            }
         }
         if (message.type == SERVER_EVENT_CIRCLE) {
-
+            command_circle* c = message.data;
+            broadcast_data(&context.server, c, sizeof(command_player));
+            //free(c);
         }
         if (message.type == SERVER_TIMER_TICK) {
-            if (!--context.game.time) {
-                //game ended!!
+            command_time p = (command_time){ COMMAND_TIME, --context.game.time};
+            broadcast_data(&context.server, &p, sizeof(command_time));
+            if (context.game.time <= 0) {
+                pthread_cancel(game_thread);
+                pthread_cancel(timer_thread);
+                pthread_join(game_thread, NULL);
+                pthread_join(timer_thread, NULL);
+                context.game.started = 0;
+                context.game.ready_count = 0;
+                command_simple c = (command_simple){ COMMAND_END };
+                broadcast_data(&context.server, &c, sizeof(command_simple));
             }
         }
     }
