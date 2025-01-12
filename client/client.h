@@ -20,4 +20,6 @@ typedef struct main_context {
     void(*on_receive)(void*, size_t, void*);
 } main_context;
 
+int start_server(short port, size_t round_time);
+
 #endif

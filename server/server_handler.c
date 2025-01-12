@@ -36,7 +36,6 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
         }
     }
     if (arg == NULL) {
-        printf("%d disconneced!\n", con_id);
         remove_player(g, con_id);
         command_player p = (command_player){ COMMAND_PLAYER, con_id, 1};
         broadcast_data(s, &p, sizeof(command_player));

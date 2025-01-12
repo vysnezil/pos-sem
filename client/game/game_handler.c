@@ -6,6 +6,7 @@
 #include "../menu/basic_menu.h"
 #include "../menu/input_menu.h"
 #include "../menu/list_menu.h"
+#include "../menu/message_menu.h"
 #include "../ui.h"
 
 void on_circle(object* obj, void* context_arg) {
@@ -80,10 +81,17 @@ void show_lobby(void* arg) {
     menu_show(&context->graphics, l);
 }
 
+void show_main_wrapper(void* arg) {
+    show_main_menu(arg);
+}
+
 void handle_command(void* arg, size_t size, main_context* context) {
     if (size == SIZE_MAX) {
-        // TODO: connection lost!
-        show_main_menu(context);
+        menu* m = malloc(sizeof(menu));
+        m->title = " Connection lost ";
+        m->type = MENU_TYPE_NOT_INIT;
+        message_menu_init(strerror(errno), m, show_main_wrapper, context);
+        menu_show(&context->graphics, m);
         return;
     }
     if (arg == NULL) return;

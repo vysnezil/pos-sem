@@ -29,7 +29,9 @@ typedef struct server_event {
 #define SERVER_EVENT_RECV 0
 #define SERVER_EVENT_CIRCLE 1
 #define SERVER_TIMER_TICK 3
-#define SERVER_TIME_SEC 10
+#define SERVER_ROUND_DEFAULT 10
+
+#define SERVER_PORT_DEFAULT 28565
 
 typedef struct server_recv_data {
     int con_id;
@@ -72,16 +74,35 @@ void* timer_tick(void* arg) {
 }
 
 int main(int argc, char** argv) {
+    short port = SERVER_PORT_DEFAULT;
+    size_t round_time = SERVER_ROUND_DEFAULT;
+    _Bool headless = 0;
+    if (argc >= 3) {
+        port = atoi(argv[1]);
+        if (port == 0) {
+            fprintf(stderr, "Invalid argument [port]\n");
+            return EINVAL;
+        }
+        round_time = atoi(argv[2]);
+        if (round_time == 0) {
+            fprintf(stderr, "Invalid argument [round time]\n");
+            return EINVAL;
+        }
+        if (argc >= 4) headless = 1;
+    }
+
     server_context context;
     syn_buffer event_buffer;
 
     _Bool running = 0;
 
+
     // TODO: handle sigint
 
-    int res = socket_server_start(&context.server, 28565, on_recv, &event_buffer);
-    if (res > 0) {
-        fprintf(stderr, "%s\n", strerror(errno));
+    int res = socket_server_start(&context.server, port, on_recv, &event_buffer);
+    if (res != 0) {
+        if (!headless) fprintf(stderr, "%s\n", strerror(errno));
+        return errno;
     }
 
     game_init(&context.game);
@@ -97,7 +118,7 @@ int main(int argc, char** argv) {
             handle_command(recv_data->con_id, recv_data->data, recv_data->len, &context);
             if (!context.game.started && context.game.ready_count > 0 &&
                 context.game.ready_count == sll_get_size(&context.game.players)) {
-                context.game.time = SERVER_TIME_SEC;
+                context.game.time = round_time;
                 context.game.started = 1;
                 pthread_create(&game_thread, NULL, game_loop, &event_buffer);
                 pthread_create(&timer_thread, NULL, timer_tick, &event_buffer);
@@ -125,4 +146,5 @@ int main(int argc, char** argv) {
         }
     }
     game_free(&context.game);
+    return 0;
 }

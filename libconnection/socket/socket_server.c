@@ -88,7 +88,6 @@ int socket_server_start(server* this, int port, void(*on_receive)(int, void*, si
     this->context = context;
     this->on_receive = on_receive;
     this->last_id = 0;
-    pthread_mutex_init(&this->mutex, NULL);
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr = (struct sockaddr_in){
@@ -103,6 +102,7 @@ int socket_server_start(server* this, int port, void(*on_receive)(int, void*, si
     if (res) return res;
     listen(sock, 5);
 
+    pthread_mutex_init(&this->mutex, NULL);
     socket_server_data* d = malloc(sizeof(socket_server_data));
     d->socket = sock;
     this->server_data = d;

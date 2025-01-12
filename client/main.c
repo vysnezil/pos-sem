@@ -72,6 +72,7 @@ void on_network(void* data, size_t size, void* context) {
     syn_buffer_add(&c->event_buffer, &m);
 }
 
+// TODO: overlay (score, time), polish, full circles
 int main() {
     main_context context;
     context.on_receive = on_network;
