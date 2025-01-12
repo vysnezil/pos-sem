@@ -6,7 +6,7 @@
 
 typedef struct object_context {
     sll objects;
-    char* screen;
+    int* screen;
     int screen_width, screen_height;
     graphics_context* graphics;
     pthread_mutex_t mutex;

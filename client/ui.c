@@ -70,6 +70,7 @@ void action_start_server(char* data, void* arg) {
     main_context* c = sc->c;
     size_t time = 60;
     if (data == NULL) {
+        free(sc);
         show_main_menu(c);
         return;
     }

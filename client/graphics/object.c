@@ -46,8 +46,8 @@ _Bool objects_click(object_context* context, int x, int y) {
         pthread_mutex_unlock(&context->mutex);
         return 1;
     }
-    char clicked_id = context->screen[y * context->screen_width + x];
-    if (clicked_id == (char)0xFF) {
+    int clicked_id = context->screen[y * context->screen_width + x];
+    if (clicked_id == -1) {
         pthread_mutex_unlock(&context->mutex);
         return 0;
     }
@@ -56,7 +56,10 @@ _Bool objects_click(object_context* context, int x, int y) {
         object* out = sll_get_ref(&context->objects, i);
         if (out != NULL && out->id == clicked_id) {
 
-            if (out->on_click == NULL) return 1;
+            if (out->on_click == NULL) {
+                pthread_mutex_unlock(&context->mutex);
+                return 1;
+            }
             out->on_click(out, out->context);
             break;
         }
@@ -88,12 +91,12 @@ void object_screen_resize(object_context* context, int w, int h) {
     pthread_mutex_lock(&context->mutex);
     context->screen_width = w;
     context->screen_height = h;
-    if (context->screen == NULL) context->screen = malloc(w * h * sizeof(char));
+    if (context->screen == NULL) context->screen = malloc(w * h * sizeof(int));
     else {
-        char* new_screen = realloc(context->screen, w * h * sizeof(char));
+        int* new_screen = realloc(context->screen, w * h * sizeof(int));
         if (new_screen != NULL) context->screen = new_screen;
     }
-    memset(context->screen, (char)0xFF, w * h);
+    memset(context->screen, 0xFF, w * h * sizeof(int));
     graphics_refresh(context->graphics, context);
     pthread_mutex_unlock(&context->mutex);
 }

@@ -5,7 +5,7 @@
 void set_circle_pixel(int x, int y, void* context) {
     object* obj = (object*)context;
     draw_pixel(x, y, obj->color);
-    char pix = (obj->color == COLOR_DEFAULT) ? (char)0xFF : (char)obj->id;
+    int pix = (obj->color == COLOR_DEFAULT) ? -1 : obj->id;
     object_context* con = obj->object_context;
     if (x < 0 || (x*2+1) >= con->screen_width || y < 0 || y >= con->screen_height) return;
     con->screen[y * con->screen_width + x*2] = pix;

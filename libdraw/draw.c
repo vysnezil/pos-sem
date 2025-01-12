@@ -61,33 +61,26 @@ void draw_char(int x, int y, int character, int fg_color, int bg_color) {
 }
 
 void draw_circle(int x, int y, int r, void(*draw)(int x, int y, void*), void* context) {
-    int dx = 0;
-    int dy = r;
+    int dx = 0, dy = r;
     int p = 1 - r;
 
-    draw(x, y + r, context);
-    draw(x, y - r, context);
-    draw(x + r, y, context);
-    draw(x - r, y, context);
-
-    while (dx < dy) {
+    while (dx <= dy) {
+        for (int i = x - dx; i <= x + dx; i++) {
+            draw(i, y + dy, context);
+            draw(i, y - dy, context);
+        }
+        for (int i = x - dy; i <= x + dy; i++) {
+            draw(i, y + dx, context);
+            draw(i, y - dx, context);
+        }
         dx++;
         if (p < 0) {
-            p = p + 2 * dx + 1;
+            p += 2 * dx + 1;
         }
         else {
             dy--;
-            p = p + 2 * (dx - dy) + 1;
+            p += 2 * (dx - dy) + 1;
         }
-
-        draw(x + dx, y + dy, context);
-        draw(x - dx, y + dy, context);
-        draw(x + dx, y - dy, context);
-        draw(x - dx, y - dy, context);
-        draw(x + dy, y + dx, context);
-        draw(x - dy, y + dx, context);
-        draw(x + dy, y - dx, context);
-        draw(x - dy, y - dx, context);
     }
 }
 
