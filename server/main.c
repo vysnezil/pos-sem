@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
     server_context context;
     context.client_count = 0;
     syn_buffer event_buffer;
+    _Bool timer_flag = 0;
 
     size_t close_count = SERVER_CLOSE_TIME;
 
@@ -148,6 +149,7 @@ int main(int argc, char** argv) {
                 broadcast_data(&context.server, &p, sizeof(command_start));
             }
             if (!context.game->started && context.client_count == 0) {
+                timer_flag = 1;
                 if (!headless) fprintf(stdout, "Server is empty, closing in: %d seconds\n", SERVER_CLOSE_TIME);
                 pthread_create(&timer_thread, NULL, timer_tick, &event_buffer);
             }
@@ -164,14 +166,13 @@ int main(int argc, char** argv) {
                 if (context.client_count == 0) {
                     close_count--;
                     if (close_count == 0) {
-                        pthread_cancel(timer_thread);
-                        pthread_join(timer_thread, NULL);
                         if (!headless) fprintf(stdout, "Server timeout [%ds] reached, closing\n", SERVER_CLOSE_TIME);
                         break;
                     }
                 }
                 else {
                     if (!headless) fprintf(stdout, "Someone connected, server close cancelled\n");
+                    timer_flag = 0;
                     pthread_cancel(timer_thread);
                     pthread_join(timer_thread, NULL);
                     close_count = SERVER_CLOSE_TIME;
@@ -193,6 +194,10 @@ int main(int argc, char** argv) {
                 broadcast_data(&context.server, &c, sizeof(command_simple));
             }
         }
+    }
+    if (timer_flag) {
+        pthread_cancel(timer_thread);
+        pthread_join(timer_thread, NULL);
     }
     game_free(context.game);
     server_destroy(&context.server);
