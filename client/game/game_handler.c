@@ -41,7 +41,10 @@ void on_ready(void* arg) {
     struct on_ready_opt* data = arg;
     main_context* context = data->context;
     data->ready = !data->ready;
-    command_ready pd = (command_ready){ COMMAND_PLAYER_READY, 0,  data->ready };
+    command_ready pd;
+    memset(&pd, 0, sizeof(command_ready));
+    pd.type = COMMAND_PLAYER_READY;
+    pd.ready = data->ready;
     connection_send(&context->connection, &pd, sizeof(command_ready));
     data->option.text = (data->ready) ? "<READY>" : " ready ";
 }

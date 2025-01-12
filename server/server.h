@@ -6,7 +6,8 @@
 
 typedef struct server_context {
     server server;
-    game game;
+    game* game;
+    int client_count;
 } server_context;
 
 #endif

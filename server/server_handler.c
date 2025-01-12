@@ -27,15 +27,17 @@ _Bool id_predicate(void* item, void* data) {
 
 void handle_command(int con_id, void* arg, size_t len, server_context* context) {
     server* s = &context->server;
-    game* g = &context->game;
+    game* g = context->game;
     if (len == 0) {
         if (arg != NULL) {
+            context->client_count++;
             command_simple com = (command_simple){ COMMAND_INIT };
             send_data(s, con_id, &com, sizeof(command_simple));
             return;
         }
     }
     if (arg == NULL) {
+        context->client_count--;
         remove_player(g, con_id);
         command_player p = (command_player){ COMMAND_PLAYER, con_id, 1};
         broadcast_data(s, &p, sizeof(command_player));

@@ -16,6 +16,7 @@ typedef struct syn_buffer {
 void syn_buffer_init(syn_buffer* this, int capacity, int el_size);
 void syn_buffer_add(syn_buffer* this, void* data);
 void syn_buffer_get(syn_buffer* this, void* data);
+void syn_buffer_timed_get(syn_buffer* this, void* data);
 void syn_buffer_free(syn_buffer* this);
 
 #endif

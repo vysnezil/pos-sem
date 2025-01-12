@@ -1,4 +1,8 @@
 #include "syn_buffer.h"
+
+#include <errno.h>
+#include <time.h>
+
 #include "stdlib.h"
 #include "string.h"
 
@@ -29,6 +33,25 @@ void syn_buffer_get(syn_buffer* this, void* data) {
     pthread_mutex_lock(&this->mutex);
     while (this->size == 0)
         pthread_cond_wait(&this->consume, &this->mutex);
+    memcpy(data, this->data + (this->out++ * this->el_size), this->el_size);
+    this->size--;
+    this->out %= this->capacity;
+    pthread_mutex_unlock(&this->mutex);
+    pthread_cond_broadcast(&this->produce);
+}
+
+void syn_buffer_timed_get(syn_buffer* this, void* data) {
+    pthread_mutex_lock(&this->mutex);
+    while (this->size == 0) {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_nsec += 250000000L;
+        int res = pthread_cond_timedwait(&this->consume, &this->mutex, &ts) ;
+        if (res == ETIMEDOUT) {
+            pthread_mutex_unlock(&this->mutex);
+            return;
+        }
+    }
     memcpy(data, this->data + (this->out++ * this->el_size), this->el_size);
     this->size--;
     this->out %= this->capacity;
