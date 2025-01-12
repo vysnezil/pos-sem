@@ -9,7 +9,7 @@ typedef struct list_menu_data {
     sll* list;
     pthread_mutex_t* list_mut;
     char* title;
-    char*(*fun)(void* obj);
+    void(*fun)(void*, char*);
     int option_count;
     menu_option** options;
     atomic_uint selected;
@@ -49,13 +49,14 @@ void list_menu_destroy(menu* m) {
 struct forach_context {
     int index;
     int* w, *h;
-    char*(*fun)(void* obj);
+    void(*fun)(void*,char*);
 };
 
 void entry_foreach(void* obj_arg, void* data_arg) {
     struct forach_context* context = data_arg;
     int w = get_width()>>2, h = get_height()>>1;
-    char* str = context->fun(obj_arg);
+    char str[40];
+    context->fun(obj_arg, str);
     int l = (int)strlen(str);
     draw_text(w - (l>>2), h + context->index++, str, COLOR_RED, MENU_BG, l % 2 == 0);
 }
@@ -86,7 +87,7 @@ void list_menu_renderer(graphics_context* context, menu* m) {
     }
 }
 
-void list_menu_init(menu* menu, char* title, sll* list, pthread_mutex_t* mut, char*(*fun)(void* obj)) {
+void list_menu_init(menu* menu, char* title, sll* list, pthread_mutex_t* mut, void(*fun)(void*,char*)) {
     if (menu->type != MENU_TYPE_NOT_INIT) return;
     menu->type = MENU_TYPE_LIST;
     menu->renderer = list_menu_renderer;

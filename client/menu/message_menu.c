@@ -38,9 +38,7 @@ void message_menu_renderer(graphics_context* context, menu* m) {
 }
 
 void message_menu_destroy(menu* m) {
-    message_menu_data* data = m->data;
     free(m->data);
-    m->data = NULL;
     free(m);
 }
 

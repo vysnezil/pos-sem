@@ -55,16 +55,13 @@ void on_leave(void* arg) {
     show_main_menu(context);
 }
 
-char* player_tostr(void* obj) {
-    return ((player*)obj)->name;
+void player_tostr(void* obj, char* out) {
+    strcpy(out, ((player*)obj)->name);
 }
 
-char* playerscore_tostr(void* obj) {
+void playerscore_tostr(void* obj, char* out) {
     player* p = obj;
-    char* buffer = malloc(40 * sizeof(char));
-    sprintf(buffer, "%s - %d", p->name, p->score);
-    p->tmp_str = buffer;
-    return buffer;
+    sprintf(out, "%s - %d", p->name, p->score);
 }
 
 void show_lobby(void* arg) {
@@ -135,7 +132,6 @@ void handle_command(void* arg, size_t size, main_context* context) {
                 memcpy(&p.name, data->name, 20);
                 p.id = data->player_id;
                 p.score = 0;
-                p.tmp_str = NULL;
                 if (sll_get_size(&g->players) == 0) {
                     show_lobby(context);
                 }

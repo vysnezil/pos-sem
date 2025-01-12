@@ -14,7 +14,6 @@ void game_init(game* game) {
 
 void add_player(game* game, player* p) {
     pthread_mutex_lock(&(game->mutex));
-    p->tmp_str = NULL;
     sll_add(&game->players, p);
     pthread_mutex_unlock(&(game->mutex));
 }
@@ -26,7 +25,6 @@ void remove_player(game* game, int player_id) {
         player* p = sll_get_ref(&game->players, i);
         if (p!= NULL && p->id == player_id) {
             sll_remove(&game->players, i);
-            if (p->tmp_str != NULL) free(p->tmp_str);
         }
     }
     pthread_mutex_unlock(&(game->mutex));
@@ -58,14 +56,9 @@ void game_stop(game* game) {
     pthread_mutex_unlock(&(game->mutex));
 }
 
-void p_tmp_data_free(void* obj, void* d) {
-    player* p = obj;
-    if (p->tmp_str != NULL) free(p->tmp_str);
-}
 
 void game_free(game* game) {
     pthread_mutex_destroy(&(game->mutex));
-    sll_for_each(&game->players, p_tmp_data_free, NULL);
     sll_destroy(&game->players);
     free(game);
 }

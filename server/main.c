@@ -74,6 +74,8 @@ void* timer_tick(void* arg) {
     return NULL;
 }
 
+// TODO: fix leaks (if any)
+
 static atomic_bool running = 1;
 
 void cancel(int arg) {

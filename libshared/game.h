@@ -7,7 +7,6 @@ typedef struct player {
     char name[20];
     int id;
     int score;
-    void* tmp_str;
 } player;
 
 typedef struct game {

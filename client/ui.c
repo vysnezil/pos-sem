@@ -36,12 +36,13 @@ void connect_callback(char* data, void* context) {
                 break;
             }
         }
-        char* ip = malloc(sizeof(data));
+        char* ip = malloc(strlen(data)+1);
         strcpy(ip, data);
         menu* m = malloc(sizeof(menu));
         m->title = " Connecting ";
         m->type = MENU_TYPE_NOT_INIT;
         message_menu_init("connecting...", m, NULL, NULL);
+        menu_show(&c->graphics, m);
         int res = socket_connect(&c->connection, ip, port, c->on_receive, context);
         free(ip);
         if (res) show_err("Error connecting to server", strerror(res), c);
@@ -59,30 +60,56 @@ void action_exit(void* arg) {
     ((main_context*)arg)->running = 0;
 }
 
+typedef struct start_context {
+    main_context* c;
+    int port;
+} start_context;
+
 void action_start_server(char* data, void* arg) {
-    main_context* c = arg;
-    short port = PORT_DEFAULT;
+    start_context* sc = arg;
+    main_context* c = sc->c;
+    size_t time = 60;
     if (data == NULL) {
         show_main_menu(c);
+        return;
+    }
+    if (*data != 0) {
+        size_t r = atoi(data);
+        if (r > 0) time = r;
+    }
+    int ser = start_server(sc->port, time);
+    if (ser) show_err("Error starting server", strerror(ser), c);
+    else {
+        int res = socket_connect(&c->connection, "127.0.0.1", sc->port, c->on_receive, c);
+        if (res) show_err("Error connecting to server", strerror(res), c);
+        else menu_hide(&c->graphics);
+    }
+    free(sc);
+}
+
+void action_ask_time(char* data, void* arg) {
+    start_context* sc = malloc(sizeof(start_context));
+    short port = 28565;
+    if (data == NULL) {
+        show_main_menu(arg);
         return;
     }
     if (*data != 0) {
         short r = atoi(data) & 0xFFFF;
         if (r > 0) port = r;
     }
-    int ser = start_server(port, 20);
-    if (ser) show_err("Error starting server", strerror(ser), c);
-    else {
-        int res = socket_connect(&c->connection, "127.0.0.1", port, c->on_receive, c);
-        if (res) show_err("Error connecting to server", strerror(res), c);
-        else menu_hide(&c->graphics);
-    }
+    sc->c = arg;
+    sc->port = port;
+    menu* in = malloc(sizeof(menu));
+    in->title = " Create server ";
+    input_menu_init("Enter round time (s): [60]", in, action_start_server, sc);
+    menu_show(&((main_context*)arg)->graphics, in);
 }
 
 void action_ask_port(void* arg) {
     menu* in = malloc(sizeof(menu));
     in->title = " Create server ";
-    input_menu_init("Enter port: [28565]", in, action_start_server, arg);
+    input_menu_init("Enter port: [28565]", in, action_ask_time, arg);
     menu_show(&((main_context*)arg)->graphics, in);
 }
 

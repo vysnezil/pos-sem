@@ -72,7 +72,7 @@ void on_network(void* data, size_t size, void* context) {
     syn_buffer_add(&c->event_buffer, &m);
 }
 
-// TODO: overlay (score, time), polish, full circles
+// TODO: polish, full circles
 int main() {
     main_context context;
     context.on_receive = on_network;
@@ -100,13 +100,10 @@ int main() {
             int key = ev_data->key, ch = ev_data->ch;
             free(ev_data);
 
-            pthread_mutex_lock(&context.graphics.menu_mutex);
             if (context.graphics.active_menu != NULL) menu_input_key(context.graphics.active_menu, key, ch);
             else {
                 if (ch == 'q') context.running = 0;
             }
-
-            pthread_mutex_unlock(&context.graphics.menu_mutex);
             graphics_refresh(&context.graphics, &context.objects);
         }
         if (message.type == MOUSE_INPUT_EVENT) {

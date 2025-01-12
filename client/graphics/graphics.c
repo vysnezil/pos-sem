@@ -36,10 +36,12 @@ void menu_show(graphics_context* context, menu* menu) {
 }
 
 void menu_hide(graphics_context* context) {
+    pthread_mutex_lock(&context->menu_mutex);
     if (context->active_menu != NULL) menu_destroy(context->active_menu);
     context->active_menu = NULL;
     render_message m = (render_message){NULL, M_MENU};
     syn_buffer_add(&context->buffer, &m);
+    pthread_mutex_unlock(&context->menu_mutex);
 }
 
 void draw_object(void* obj, void* context) {

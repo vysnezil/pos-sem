@@ -52,7 +52,6 @@ void handle_command(int con_id, void* arg, size_t len, server_context* context) 
             memcpy(p.name, data->name, 20);
             p.id = con_id;
             p.score = 0;
-            p.tmp_str = 0;
             pthread_mutex_lock(&g->mutex);
             struct forech_sendplayer_context cnt = (struct forech_sendplayer_context) { s, con_id };
             sll_for_each(&g->players, forech_sendplayer, &cnt);
