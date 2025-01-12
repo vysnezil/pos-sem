@@ -14,6 +14,7 @@
 #include "../libshared/game.h"
 #include "../libshared/command_types.h"
 
+#include "../libconnection/connection.h"
 #include "server.h"
 
 #define LIMIT_X 60
@@ -101,6 +102,7 @@ int main(int argc, char** argv) {
     }
 
     server_context context;
+    context.client_count = 0;
     syn_buffer event_buffer;
 
     size_t close_count = SERVER_CLOSE_TIME;
@@ -139,17 +141,23 @@ int main(int argc, char** argv) {
                 context.game->started = 1;
                 pthread_create(&game_thread, NULL, game_loop, &event_buffer);
                 pthread_create(&timer_thread, NULL, timer_tick, &event_buffer);
-                command_start p = (command_start){ COMMAND_START, context.game->time};
-                broadcast_data(&context.server, &p, sizeof(command_player));
+                command_start p;
+                memset(&p, 0, sizeof(command_start));
+                p.type = COMMAND_START;
+                p.time = context.game->time;
+                broadcast_data(&context.server, &p, sizeof(command_start));
             }
             if (!context.game->started && context.client_count == 0) {
                 if (!headless) fprintf(stdout, "Server is empty, closing in: %d seconds\n", SERVER_CLOSE_TIME);
                 pthread_create(&timer_thread, NULL, timer_tick, &event_buffer);
             }
+            if (recv_data->data != NULL) free(recv_data->data);
+            free(recv_data);
         }
         if (message.type == SERVER_EVENT_CIRCLE) {
             command_circle* c = message.data;
-            broadcast_data(&context.server, c, sizeof(command_player));
+            broadcast_data(&context.server, c, sizeof(command_circle));
+            free(c);
         }
         if (message.type == SERVER_TIMER_TICK) {
             if (!context.game->started && context.client_count >= 0) {
@@ -170,7 +178,10 @@ int main(int argc, char** argv) {
                 }
             }
 
-            command_time p = (command_time){ COMMAND_TIME, --context.game->time};
+            command_time p;
+            memset(&p, 0, sizeof(command_time));
+            p.type = COMMAND_TIME;
+            p.time = --context.game->time;
             broadcast_data(&context.server, &p, sizeof(command_time));
             if (context.game->time <= 0) {
                 pthread_cancel(game_thread);
@@ -184,5 +195,7 @@ int main(int argc, char** argv) {
         }
     }
     game_free(context.game);
+    server_destroy(&context.server);
+    syn_buffer_free(&event_buffer);
     return 0;
 }

@@ -41,7 +41,7 @@ void connect_callback(char* data, void* context) {
         menu* m = malloc(sizeof(menu));
         m->title = " Connecting ";
         m->type = MENU_TYPE_NOT_INIT;
-        message_menu_init("connecting...", m, NULL, NULL);
+        message_menu_init("connecting...", m, show_main, c);
         menu_show(&c->graphics, m);
         int res = socket_connect(&c->connection, ip, port, c->on_receive, context);
         free(ip);

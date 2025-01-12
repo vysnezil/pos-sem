@@ -34,18 +34,18 @@ void server_close_connection(server* server, int connection_id) {
     pthread_mutex_lock(&server->mutex);
     connection* con = sll_find(&server->connections, con_id_predicate, &connection_id);
     if (con != NULL) {
-        con->close(con);
         // n*n slow find, should be good enough
         int len = sll_get_size(&server->connections);
         for (int i = 0 ; i < len; i++) {
             connection* c = sll_get_ref(&server->connections, i);
             if (c->id == connection_id) {
+                c->close(c);
                 sll_remove(&server->connections, i);
                 break;
             }
         }
     }
-    pthread_mutex_lock(&server->mutex);
+    pthread_mutex_unlock(&server->mutex);
 }
 
 void server_destroy(server* server) {

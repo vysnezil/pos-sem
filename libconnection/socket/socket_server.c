@@ -18,9 +18,11 @@ typedef struct server_connection {
 
 void* handle_single_connection(void* arg) {
     server_connection svc = *(server_connection*)arg;
-    //free(arg);
+    free(arg);
     socket_connection_data* con_data = svc.con->connection_data;
-    svc.srv->on_receive(svc.con->id, &svc.con->id, 0, svc.srv->context);
+    int* i = malloc(sizeof(int));
+    *i = svc.con->id;
+    svc.srv->on_receive(svc.con->id, i, 0, svc.srv->context);
     int con_id = svc.con->id;
     while (1) {
         size_t size;
@@ -30,17 +32,11 @@ void* handle_single_connection(void* arg) {
         svc.srv->on_receive(con_id, buffer, size, svc.srv->context);
     }
     svc.srv->on_receive(con_id, NULL, 0, svc.srv->context);
-    pthread_mutex_lock(&svc.srv->mutex);
-    size_t len = sll_get_size(&svc.srv->connections);
-    for (int i = 0; i < len; i++) {
-        connection* out = sll_get_ref(&svc.srv->connections, i);
-        if (out->id == con_id) {
-            sll_remove(&svc.srv->connections, i);
-            break;
-        }
-    }
-    pthread_mutex_unlock(&svc.srv->mutex);
     return NULL;
+}
+
+_Bool conn_id_predicate(void* item, void* data) {
+    return ((connection*)item)->id == *(int*)data;
 }
 
 void* handle_new_connections(void* arg) {
@@ -55,15 +51,15 @@ void* handle_new_connections(void* arg) {
 
         server_connection* svc = malloc(sizeof(server_connection));
         svc->srv = srv;
-        svc->con = con;
-
-        socket_connection_init(con, incoming);
-        socket_connection_data* con_data = con->connection_data;
-        pthread_create(&con_data->thread, NULL, handle_single_connection, svc);
 
         pthread_mutex_lock(&srv->mutex);
         sll_add(&srv->connections, con);
+        connection* copy_con = sll_find(&srv->connections, conn_id_predicate, &con->id);
+        socket_connection_init(copy_con, incoming);
+        svc->con = copy_con;
         pthread_mutex_unlock(&srv->mutex);
+        pthread_create(&((socket_connection_data*)copy_con->connection_data)->thread, NULL, handle_single_connection, svc);
+        free(con);
     }
     return NULL;
 }
@@ -81,6 +77,8 @@ void socket_server_free(server* this) {
     sll_destroy(&this->connections);
     close(((socket_server_data*)this->server_data)->socket);
     pthread_mutex_unlock(&this->mutex);
+    pthread_mutex_destroy(&this->mutex);
+    free(this->server_data);
 }
 
 int socket_server_start(server* this, int port, void(*on_receive)(int, void*, size_t, void*), void* context) {

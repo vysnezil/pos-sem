@@ -43,7 +43,6 @@ void socket_con_free(connection* con) {
     pthread_join(data->thread, NULL);
     close(data->socket);
     free(con->connection_data);
-    con->connection_data = NULL;
 }
 
 void socket_connection_init(connection* con, int socket) {
