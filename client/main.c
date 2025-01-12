@@ -76,6 +76,8 @@ int main() {
     main_context context;
     context.on_receive = on_network;
     context.running = 1;
+    context.game = NULL;
+    context.connection.id = -1;
     syn_buffer_init(&context.event_buffer, 16, sizeof(event_message));
 
     graphics_init(&context.graphics);
@@ -88,6 +90,10 @@ int main() {
     while (context.running) {
         event_message message;
         syn_buffer_get(&context.event_buffer, &message);
+        if (message.type == RESIZE_EVENT) {
+            object_screen_resize(&context.objects, get_width(), get_height());
+            graphics_refresh(&context.graphics, &context.objects);
+        }
         if (message.type == KEY_INPUT_EVENT) {
             key_input_event_data* ev_data = message.data;
             int key = ev_data->key, ch = ev_data->ch;
@@ -111,10 +117,12 @@ int main() {
         if (message.type == CONNECTION_EVENT) {
             network_event_data* ev_data = message.data;
             handle_command(ev_data->data, ev_data->size, &context);
+            free(ev_data->data);
             free(ev_data);
         }
     }
 
+    if (context.game != NULL) game_free(context.game);
     if (context.connection.id != -1) connection_close(&context.connection);
     object_context_free(&context.objects);
     input_destroy(&context.input);

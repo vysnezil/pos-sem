@@ -28,8 +28,13 @@ void remove_object(object_context* context, int object_id) {
     pthread_mutex_unlock(&context->mutex);
 }
 
+void s_obj_free(void* obj, void* data) {
+    free_object(obj);
+}
+
 void objects_clear(object_context* context) {
     pthread_mutex_lock(&context->mutex);
+    sll_for_each(&context->objects, s_obj_free, NULL);
     sll_clear(&context->objects);
     graphics_refresh(context->graphics, context);
     pthread_mutex_unlock(&context->mutex);
@@ -63,10 +68,6 @@ _Bool objects_click(object_context* context, int x, int y) {
 
 void free_object(object* obj) {
     if (obj->data != NULL) free(obj->data);
-}
-
-void s_obj_free(void* obj, void* data) {
-    free_object(obj);
 }
 
 void object_context_init(object_context* context, graphics_context* graphics) {

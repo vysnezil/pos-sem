@@ -86,7 +86,9 @@ void input_menu_renderer(graphics_context* context, menu* m) {
 void input_menu_destroy(menu* m) {
     input_menu_data* data = m->data;
     if (data->buffer != NULL) free(data->buffer);
+    data->buffer = NULL;
     free(m->data);
+    m->data = NULL;
     free(m);
 }
 

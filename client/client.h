@@ -15,7 +15,7 @@ typedef struct main_context {
     input_context input;
     connection connection;
     atomic_bool running;
-    game game;
+    game* game;
 
     void(*on_receive)(void*, size_t, void*);
 } main_context;
