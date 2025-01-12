@@ -108,11 +108,7 @@ int main(int argc, char** argv) {
 
     size_t close_count = SERVER_CLOSE_TIME;
 
-    struct sigaction cancel_action;
-    cancel_action.sa_handler = cancel;
-    cancel_action.sa_flags = 0;
-    sigemptyset(&cancel_action.sa_mask);
-    sigaction(SIGINT, &cancel_action, NULL);
+    signal(SIGINT, cancel);
 
     int res = socket_server_start(&context.server, port, on_recv, &event_buffer);
     if (res != 0) {
